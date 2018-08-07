@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="ImageRFDBModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityType Name="ImageRFTable">
+    <Key>
+      <PropertyRef Name="ImageRFId" />
+    </Key>
+    <Property Name="ImageRFId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Requestor" Type="nvarchar" MaxLength="100" />
+    <Property Name="InquiryCategory" Type="nvarchar" MaxLength="100" />
+    <Property Name="TeamName" Type="nvarchar" MaxLength="100" />
+    <Property Name="ReviewRequestTitle" Type="nvarchar" MaxLength="100" />
+    <Property Name="Details" Type="nvarchar" MaxLength="1000" />
+    <Property Name="AliasesToCC" Type="nvarchar" MaxLength="250" />
+    <Property Name="ProductReleaseDate" Type="datetime2" />
+  </EntityType>
+  <EntityContainer Name="ImageRFDBModelStoreContainer">
+    <EntitySet Name="ImageRFTable" EntityType="Self.ImageRFTable" Schema="dbo" store:Type="Tables" />
+  </EntityContainer>
+</Schema>

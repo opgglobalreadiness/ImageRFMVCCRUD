@@ -1,0 +1,812 @@
+﻿@model ImageRFMVCCRUD.Models.ImageRFTable
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GR: Image Reviewer Tool</title>
+    <style>
+        /* CSS used here will be applied after bootstrap.css */
+
+        th {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        td {
+            padding-right: 10px;
+            vertical-align: top;
+            padding-bottom: 10px;
+        }
+        td img {
+            width: 200px;
+            height: 165px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        .table thead tr th{
+            border-bottom: 1px solid #ff6a00;
+        }
+        div.container a.input-group-btn {
+            font-size: 14px;
+        }
+
+    </style>
+
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class="page-header" style="padding-bottom:10px;border-bottom:1px solid #ff6a00;margin-top: 10px;margin-bottom: 10px; ">
+                <h2>Global Readiness: Image Reviewer Tool (work in progress...)</h2>
+            </div>
+
+            <!-- Modified By and Modified Date -->
+            <div style="margin-left:0px">
+                <div class="form-group col-md-12" style="padding-bottom:10px;border-bottom:1px solid #ff6a00;">
+                    <div style="margin-left:-10px;padding-bottom:5px">
+                        <label for="requestDate">Search</label> <br />
+                        <form action="#" method="get">
+                            <div class="input-group">
+                                <input class="form-control" id="system-search" name="q" placeholder="Search for" required>
+                            </div>
+                        </form>
+
+                    </div>
+                </div>
+
+                <div>
+                    <table id="ReviewEntryJson"></table>
+                </div>
+
+                <div class="form-group col-md-12" style="margin-top:20px">
+                    <button class="btn btn-success pull-right" id="btn-save-form" type="submit">Save Form</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        //Themes and SubCategories Config setting
+        var themeDialog = {
+            autoOpen: false,
+            modal: true,
+            width: 645,
+            title: "Themes or Subcategories",
+
+            open: function () {
+                selectCheckboxesForThemesOrCategories();
+                    populateTextAreaForThemesOrCategories();
+                $(this).find('.error').hide();
+                    },
+
+            buttons: {
+                'Ok': function () {
+                    $(this).dialog('close');
+                    },
+                'Cancel': function () {
+                    $(this).dialog('close');
+                    }
+                }
+        };
+
+
+        //Target Markets Config setting
+        var targetMarkets = {
+            autoOpen: false,
+            modal: true,
+            width: 345,
+            title: "Target Markets",
+
+            open: function () {
+                selectCheckboxesForTargetMarkets();
+                populateTextAreaForTargetMarkets();
+               $(this).find('.error').hide();
+            },
+
+            buttons: {
+                'Ok': function () {
+                    $(this).dialog('close');
+                },
+                'Cancel': function () {
+                    $(this).dialog('close');
+                }
+            }
+        };
+
+        //function make_json(form) {
+        //    var json = {
+        //        "ModifiedBy" : form.modifiedBy.value
+        //    }
+        //    var html = JSON.stringify(json, 0, 4);
+        //    document.getElementById("output").innerHTML = html;
+        //    return false;
+        //}
+
+        $(document).ready(function () {          
+
+            function objectifyForm(formArray) {//serialize data function
+                var returnArray = {};
+                for (var i = 1; i < formArray.length; i++) {
+                    returnArray[formArray[i]['name']] = formArray[i]['value'];
+                }
+                return returnArray;
+            }
+
+            $("#btn-save-form").click(function () {
+                var data = objectifyForm($('form').serializeArray());
+                $.ajax({
+                    data: { 'formData': data },
+                    type: "POST",
+                    url: "/ImageRequest/Review/",
+                    success: function (data) {
+                        //alert(data);
+                        if (data.success) {
+                            dataTable.ajax.reload();
+                            $.notify(data.message, {
+                                globalPosition: "top center",
+                                className: "success"
+                            })
+                        }
+                        //close dialog
+                        //var formDiv = $('<div />');
+                        //formDiv.dialog().dialog('destroy').remove();
+                        //requestID
+                        var url = localStorage.getItem('requestID');
+                        var toRemove = '/ImageRequest/Review/';
+
+                        //Send email
+                        var requestID = url.replace(toRemove, '');
+                        var modifiedBy = document.getElementById('modifiedBy').value;
+                        var modifiedDate = document.getElementById('modifiedDate').value;
+                        var imageSrc = document.getElementById('imageSrc_1').value;
+
+                        $.ajax({
+                            url: "/ImageRequest/SendEMailReviewFormFromAzureAsync/",
+                            data: {
+                                _requestID: requestID,
+                                _modifiedBy: modifiedBy,
+                                _modifiedDate: modifiedDate,
+                                _imageSrc: imageSrc,
+                            },
+                            success: function (data) {
+                                alert("Email sent successfully!");
+                            }
+                        })
+                    }
+                });
+            })
+
+
+
+            //Expand and Collapse
+            $('a[data-toggle="collapse"]').on('click', function () {
+
+                var objectID = $(this).attr('href');
+
+                if ($(objectID).hasClass('in') === false) {
+                    $(objectID).collapse('show');
+                }
+                else {
+                    $(objectID).collapse('hide');
+                }
+            });
+
+            $('#expandAll').on('click', function () {
+
+                $('a[data-toggle="collapse"]').each(function () {
+                    var objectID = $(this).attr('href');
+                    if ($(objectID).hasClass('in') === false) {
+                        $(objectID).collapse('show');
+                    }
+                });
+            });
+
+            $('#collapseAll').on('click', function () {
+
+                $('a[data-toggle="collapse"]').each(function () {
+                    var objectID = $(this).attr('href');
+                    $(objectID).collapse('hide');
+                });
+            });
+
+            //Retrieved from JSON File
+            var htmlTBody = "";
+
+            //Format Datestamp
+            var now = new Date();
+            var nowYear = now.getFullYear();
+            var nowMonth = now.getMonth() + 1;
+            var nowDate = now.getDate();          
+
+            var DateStamp = nowMonth.toString() + "/" + nowDate.toString() + "/" + nowYear.toString();
+
+            $.ajax({
+                "url": '@ViewBag.jsonFile',
+                "dataType": 'json',
+                "type": 'GET',
+                "success": function (images) {
+                    //console.log('success', images);
+                    htmlTBody += "<form action=\"/ImageRequest/Review\" id=\"ImageReviewForm\" method=\"post\">";
+                    htmlTBody += "<div style=\"padding-bottom:10px;border-bottom:1px solid #ff6a00;margin-bottom: 5px;\">";
+                    htmlTBody += "<div class=\"form-group col-md-2\" style=\"margin-left: -10px\">";
+                    htmlTBody += "<label for=\"requestor\">Modified by</label>";
+                    htmlTBody += "<input type=\"text\" class=\"form-control\" id=\"modifiedBy\" name=\"modifiedBy\" />";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<div class=\"form-group col-md-2\">";
+                    htmlTBody += "<label for=\"requestDate\">Modified Date</label>";
+                    htmlTBody += "<input type=\"text\" class=\"form-control\" id=\"modifiedDate\" name=\"modifiedDate\" value=\"" + DateStamp + "\" readonly />";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<div class=\"form-group col-md-2\">";
+                    htmlTBody += "<label for=\"requestDate\">Export to Excel</label> <br />";
+                    htmlTBody += "<input class=\"btn btn-success\" type=\"button\" value=\"Export All Data to Excel\">";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<table class=\"table table-list-search\" style=\"padding-bottom: 10px; border-top: 1px solid #ff6a00\" >";
+                    htmlTBody += "<thead>";
+                    htmlTBody += "<th width=\"150px\" style=\"padding-top:13px\">INFO</th>";
+                    htmlTBody += "<th>IMAGE</th>";
+                    htmlTBody += "<th width=\"170px\">COMMENTS</th>";
+                    htmlTBody += "<th width=\"90px\">SIGNOFF</th>";
+                    htmlTBody += "<th width=\"170px\">REVIEW COMMENTS</th>";
+                    htmlTBody += "<th width=\"150px\">SIGNOFF</th>";
+                    htmlTBody += "<th width=\"190px\">REJECT INFO</th>";
+                    htmlTBody += "</thead>";
+                    htmlTBody += "<tbody>";
+                    $.each(images.Metadata, function (index, image) {
+                        //Initialize Designer Signoff checked property variables
+                        var designerSignoff_accepted = "";
+                        var designerSignoff_rejected = "";
+                        var designerSignoff_pending = "";
+
+                        //Initialize CELA Signoff checked property variables
+                        var celaSignoff_accepted = "";
+                        var celaSignoff_rejected = "";
+                        var celaSignoff_pending = "";
+
+                        //Initialize GeoPolFullMarketSignoff Signoff checked property variables
+                        var geoPolFullMarketSignoff_accepted = "";
+                        var geoPolFullMarketSignoff_pending = "";
+                        var geoPolFullMarketSignoff_sev1 = "";
+                        var geoPolFullMarketSignoff_sev2 = "";
+                        var geoPolFullMarketSignoff_sev3 = "";
+                        var geoPolFullMarketSignoff_sev4 = "";
+
+                        //Initialize LSP Signoff checked property variables
+                        var LSPSignoff_accepted = "";
+                        var LSPSignoff_pending = "";
+                        var LSPSignoff_sev1 = "";
+                        var LSPSignoff_sev2 = "";
+                        var LSPSignoff_sev3 = "";
+                        var LSPSignoff_sev4 = "";
+
+                        //Determine the checked property for the Designer Signoff
+                        switch (image.DesignerSignoff) {
+                            case 'accepted':
+                                designerSignoff_accepted = "checked";
+                                break;
+                            case 'rejected':
+                                designerSignoff_rejected = "checked";
+                                break;
+                            case 'pending':
+                                designerSignoff_pending = "checked";
+                                break;
+                        }
+
+                        //Determine the checked property for the CELA Signoff
+                        switch (image.CelaSignoff) {
+                            case 'accepted':
+                                celaSignoff_accepted = "checked";
+                                break;
+                            case 'rejected':
+                                celaSignoff_rejected = "checked";
+                                break;
+                            case 'pending':
+                                celaSignoff_pending = "checked";
+                                break;
+                        }
+
+                        //Determine the checked property for the GeoPolFullMarket Signoff
+                        switch (image.GeopolFullMarketSignoff) {
+                            case 'accepted':
+                                geoPolFullMarketSignoff_accepted = "checked";
+                                break;
+                            case 'pending':
+                                geoPolFullMarketSignoff_pending = "checked";
+                                break;
+                            case 'sev1':
+                                geoPolFullMarketSignoff_sev1 = "checked";
+                                break;
+                            case 'sev2':
+                                geoPolFullMarketSignoff_sev2 = "checked";
+                                break;
+                            case 'sev3':
+                                geoPolFullMarketSignoff_sev3 = "checked";
+                                break;
+                            case 'sev4':
+                                geoPolFullMarketSignoff_sev4 = "checked";
+                                break;
+                        }
+
+                        //Determine the checked property for the LSP Signoff
+                        switch (image.LSPSignoff) {
+                            case 'accepted':
+                                LSPSignoff_accepted = "checked";
+                                break;
+                            case 'pending':
+                                LSPSignoff_pending = "checked";
+                                break;
+                            case 'sev1':
+                                LSPSignoff_sev1 = "checked";
+                                break;
+                            case 'sev2':
+                                LSPSignoff_sev2 = "checked";
+                                break;
+                            case 'sev3':
+                                LSPSignoff_sev3 = "checked";
+                                break;
+                            case 'sev4':
+                                LSPSignoff_sev4 = "checked";
+                                break;
+                        }
+                        index++;
+                        htmlTBody += "<tr>";
+                        htmlTBody += "<td style=\"width:150px;\">";
+                        htmlTBody += "<div style=\"margin-left:0px;margin-top:5px;font-size: small\">";
+                        htmlTBody += "<span class=\"small\">Image Id:</span><br/>";
+                        htmlTBody += "<input type=\"text\" id=\"imageID_" + index + "\" name=\"imageID_" + index + "\" class=\"form-control\" value=\"" + image.Id + "\" readonly /><br />";
+                        htmlTBody += "<span class=\"small\" style=\"margin-top:25px;\">Image Name: </span><br/>";
+                        htmlTBody += "<input type=\"text\" id=\"imageFilename_" + index + "\" name=\"imageFilename_" + index + "\" class=\"form-control\" value=\"" + image.Filename + "\" readonly /><br />";
+                        htmlTBody += "<span class=\"small\" style=\"margin-top:25px;\">Comments: </span><br/>";
+                        htmlTBody += "<textarea id=\"imageComments_" + index + "\" name=\"imageComments_" + index + "\" class=\"form-control\" readonly style=\"width: 170px; height: 45px;\">" + image.Comments + "</textarea>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td><a href='" + image.Images + "' target=\"_blank\"><img id=\"bigImage_" + index + "\" src=\"" + image.Images + "\"</img></a><br>";
+                        htmlTBody += "<input type=\"hidden\" class=\"form-control\" id=\"imageSrc_" + index + "\" name=\"imageSrc_" + index + "\" value=\"" + image.Images + "\" readonly />";
+                        htmlTBody += "</td> ";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-bottom:5px\">";
+                        htmlTBody += "<span class=\"small\">Designer Comments</span>";
+                        htmlTBody += "<textarea id=\"DesignerComments_" + index + "\" name=\"DesignerComments_" + index + "\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.DesignerComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:10px\">";
+                        htmlTBody += "<span class=\"small\">CELA Comments</span>";
+                        htmlTBody += "<textarea id=\"CelaComments_" + index + "\" name=\"CelaComments_" + index + "\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.CelaComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-left:0px;margin-top:20px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"DesignerSignoff_" + index + "\" name=\"DesignerSignoff_" + index + "\" value=\"accepted\"" + designerSignoff_accepted + "/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"DesignerSignoff_" + index + "\" name=\"DesignerSignoff_" + index + "\" value=\"rejected\"" + designerSignoff_rejected + "/>Rejected";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"DesignerSignoff_" + index + "\" name=\"DesignerSignoff_" + index + "\" value=\"pending\"" + designerSignoff_pending + "/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:42px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom: 0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"CelaSignoff_" + index + "\" name=\"CelaSignoff_" + index + "\" value=\"accepted\"" + celaSignoff_accepted + "/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"CelaSignoff_" + index + "\" name=\"CelaSignoff_" + index + "\" value=\"rejected\"" + celaSignoff_rejected + "/>Rejected";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom: 0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"CelaSignoff_" + index + "\" name=\"CelaSignoff_" + index + "\" value=\"pending\"" + celaSignoff_pending + "/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-bottom:5px\">";
+                        htmlTBody += "<span class=\"small\">GeoPol Comments</span>";
+                        htmlTBody += "<textarea id=\"GeopolFullMarketComments_" + index + "\" name=\"GeopolFullMarketComments_" + index + "\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.GeopolFullMarketComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:10px\">";
+                        htmlTBody += "<span class=\"small\">LSP Comments</span>";
+                        htmlTBody += "<textarea id=\"LSPComments_" + index + "\" name=\"LSPComments_" + index + "\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.LSPComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td style=\"width:135px\">";
+                        htmlTBody += "<div style=\"margin-left:0px;margin-top:15px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"GeopolFullMarketSignoff_" + index + "\" name=\"GeopolFullMarketSignoff_" + index + "\" value=\"accepted\"" + geoPolFullMarketSignoff_accepted + "/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"GeopolFullMarketSignoff_" + index + "\" name=\"GeopolFullMarketSignoff_" + index + "\" value=\"pending\"" + geoPolFullMarketSignoff_pending + "/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"GeopolFullMarketSignoff_" + index + "\" name=\"GeopolFullMarketSignoff_" + index + "\" value=\"sev1\"" + geoPolFullMarketSignoff_sev1 + "/>S1&nbsp;&nbsp;";
+                        htmlTBody += "<input type =\"radio\" id=\"GeopolFullMarketSignoff_" + index + "\" name=\"GeopolFullMarketSignoff_" + index + "\" value=\"sev2\"" + geoPolFullMarketSignoff_sev2 + "/>S2&nbsp;<br />";
+                        htmlTBody += "<input type=\"radio\" id=\"GeopolFullMarketSignoff_" + index + "\" name=\"GeopolFullMarketSignoff_" + index + "\" value=\"sev3\"" + geoPolFullMarketSignoff_sev3 + "/>S3&nbsp;&nbsp;";
+                        htmlTBody += "<input type =\"radio\" id=\"GeopolFullMarketSignoff_" + index + "\" name=\"GeopolFullMarketSignoff_" + index + "\" value=\"sev4\"" + geoPolFullMarketSignoff_sev4 + "/>S4";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:25px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom: 0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"LSPSignoff_" + index + "\" name=\"LSPSignoff_" + index + "\" value=\"accepted\"" + LSPSignoff_accepted + "/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"LSPSignoff_" + index + "\" name=\"LSPSignoff_" + index + "\" value=\"pending\"" + LSPSignoff_pending + "/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"LSPSignoff_" + index + "\" name=\"LSPSignoff_" + index + "\" value=\"sev1\"" + LSPSignoff_sev1 + "/>S1&nbsp;&nbsp;";
+                        htmlTBody += "<input type =\"radio\" id=\"LSPSignoff_" + index + "\" name=\"LSPSignoff_" + index + "\" value=\"sev2\"" + LSPSignoff_sev2 + "/>S2&nbsp;<br />";
+                        htmlTBody += "<input type=\"radio\" id=\"LSPSignoff_" + index + "\" name=\"LSPSignoff_" + index + "\" value=\"sev3\"" + LSPSignoff_sev3 + "/>S3&nbsp;&nbsp;";
+                        htmlTBody += "<input type =\"radio\" id=\"LSPSignoff_" + index + "\" name=\"LSPSignoff_" + index + "\" value=\"sev4\"" + LSPSignoff_sev4 + "/>S4";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-bottom:5px\">";
+                        htmlTBody += "<span class=\"small\">Themes and Subcategories</span>";
+                        htmlTBody += "<textarea id=\"themeCategoriesID_" + index + "\" name=\"themeCategoriesID_" + index + "\" onclick=\"$('#themesSubCategoriesDialog').dialog(themeDialog).dialog('open'); return false;\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.ThemeCategories + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:10px\">";
+                        htmlTBody += "<span class=\"small\">Target Markets</span>";
+                        htmlTBody += "<textarea id=\"targetMarketsID_" + index + "\" name=\"targetMarketsID_" + index + "\" onclick=\"$('#targetMarketsDialog').dialog(targetMarkets).dialog('open'); return false;\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.TargetMarkets + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+
+                        htmlTBody += "</tr>";
+
+                    });
+                    htmlTBody += "</form>";
+                    htmlTBody += "</tbody>";
+                    htmlTBody += "</table>";
+                    $(htmlTBody).appendTo('#ReviewEntryJson');
+                    $("#modifiedBy").val(images.ModifiedBy);
+
+                    //Write output to the html page
+                    //$(html).appendTo('#ReviewEntryJson');
+
+                },
+                "error": function () {
+                    alert("Error encountered");
+                }
+            });
+      
+
+            //Target Markets
+            $('body').append(
+                '<div id="targetMarketsDialog" title="Target Markets" class="ui-helper-hidden">' +
+                '<p class="error">' +
+                '<span class="ui-icon ui-icon-alert">&nbsp;</span>' +
+                '<span class="message">&nbsp;</span>' +
+                '</p>' +
+                '<div>' +
+                '<label>Please select the appropriate checkboxes</label>' +
+                '<div class="block_brake">&nbsp;</div>' +
+                '<div id="targetMarketsCheckboxes">' +
+                '<table class="table-sm">' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Global_Release" value="Global_Release">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_1">&nbsp;Global Release</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_US-only_Release" value="US-only_Release">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_2">&nbsp;US-only Release</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Western_Markets" value="Western_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_5">&nbsp;Western Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Asian_Markets" value="Asian_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_8">&nbsp;Asian Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td colspan="2" style="width: 300px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Latin-American_Markets" value="Latin-American_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_10">&nbsp;Latin-American Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td colspan="2 " style="width: 300px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_African_Middle_Eastern_Markets" value="African/Middle_Eastern_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_10">&nbsp;African/Middle Eastern Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '</table>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+
+            //Themes and Subcategories
+            $('body').append(
+                '<div id="themesSubCategoriesDialog" title="Themes or Subcategories" class="ui-helper-hidden">' +
+                '<p class="error">' +
+                '<span class="ui-icon ui-icon-alert">&nbsp;</span>' +
+                '<span class="message">&nbsp;</span>' +
+                '</p>' +
+                '<div>' +
+                '<label>Please select the appropriate checkboxes</label>' +
+                '<div class="block_brake">&nbsp;</div>' +
+                '<div id="subCategoryOrThemesCheckboxes">' +
+                '<table class="table-sm">' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Alcohol" value="Alcohol">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_1">&nbsp;Alcohol</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Animals" value="Animals">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_2">&nbsp;Animals</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Closing" value="Clothing">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_3">&nbsp;Clothing</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Cultural" value="Cultural">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_4">&nbsp;Cultural</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Creatures" value="Creatures">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_5">&nbsp;Creatures</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Ethnic_diversity" value="Ethnic_Diversity">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_8">&nbsp;Ethnic diversity</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Fictitious_Content" value="Fictitious_Content">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_13">&nbsp;Fictitious Content</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Gender_diversity" value="Gender_Diversity">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_7">&nbsp;Gender diversity</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Globes_Flags_Maps" value="Globes_Flags_Maps">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_10">&nbsp;Globes/flags/Maps</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Hands_Feet" value="Hands_and_Feet">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_11">&nbsp;Hands & feet</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Landmarks" value="Landmarks">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_12">&nbsp;Landmarks</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Logos_Symbols" value="Logos_and_Symbols">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_9">&nbsp;Logos & Symbols</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Religion" value="Religion">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_14">&nbsp;Religion</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Text" value="Text">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_15">&nbsp;Text</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Violence" value="Violence">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_16">&nbsp;Violence</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '</table>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+
+            //Themes or Subcategories Config setting
+            $('#themesSubCategoriesDialog').dialog({
+                autoOpen: false,
+                modal: true,
+                width: 645,
+
+                open: function () {
+                    $(this).find('.error').hide();
+                },
+
+                buttons: {
+                    'Ok': function () {
+                        selectCheckboxesForThemesOrCategories();
+                        populateTextAreaForThemesOrCategories();
+                        $(this).dialog('close');
+                    },
+                    'Cancel': function () {
+                        $(this).dialog('close');
+                        $(this).find('form')[0].reset();
+                    }
+                }
+            });
+
+
+            //Target Markets Config setting
+            $('#targetMarketsDialog').dialog({
+                autoOpen: false,
+                modal: true,
+                width: 345,
+
+                open: function () {
+                    $(this).find('.error').hide();
+                },
+
+                buttons: {
+                    'Ok': function () {
+                        selectCheckboxesForTargetMarkets();
+                        populateTextAreaForTargetMarkets();
+                        $(this).dialog('close');
+                    },
+                    'Cancel': function () {
+                        $(this).dialog('close');
+                        $(this).find('form')[0].reset();
+
+                    }
+                }
+            });
+
+            //Search
+            var activeSystemClass = $('.list-group-item.active');
+
+            //something is entered in search form
+            $('#system-search').keyup(function () {
+                var that = this;
+                // affect all table rows on in systems table
+                var tableBody = $('.table-list-search tbody');
+                var tableRowsClass = $('.table-list-search tbody tr');
+                $('.search-sf').remove();
+                tableRowsClass.each(function (i, val) {
+
+                    //Lower text for case insensitive
+                    var rowText = $(val).text().toLowerCase();
+                    var inputText = $(that).val().toLowerCase();
+                    if (inputText != '') {
+                        $('.search-query-sf').remove();
+                        tableBody.prepend('<tr class="search-query-sf"><td colspan="6"><strong>Searching for: "'
+                            + $(that).val()
+                            + '"</strong></td></tr>');
+                    }
+                    else {
+                        $('.search-query-sf').remove();
+                    }
+
+                    if (rowText.indexOf(inputText) == -1) {
+                        //hide rows
+                        tableRowsClass.eq(i).hide();
+
+                    }
+                    else {
+                        $('.search-sf').remove();
+                        tableRowsClass.eq(i).show();
+                    }
+                });
+                //all tr elements are hidden
+                if (tableRowsClass.children(':visible').length == 0) {
+                    tableBody.append('<tr class="search-sf"><td class="text-muted" colspan="6">No entries found.</td></tr>');
+                }
+            });         
+
+
+        });
+
+        //Select checkboxes for themes or subcategories
+        function selectCheckboxesForThemesOrCategories() {
+            $("textarea").on("click", function () {
+                $('.themeCheckbox').prop('checked', false);
+
+                var arrayOfCheckboxItems = $(this).val().split(',');
+                $.each(arrayOfCheckboxItems, function (index, item) {
+                    $("input[type=checkbox][value=" + item.trim() + "]").prop("checked", "true");
+                });
+            });
+        }
+
+        //Populate textarea field for themes or subcategories
+        function populateTextAreaForThemesOrCategories() {
+            var focusElement = {};
+
+            $("textarea").focus(function () {
+                focusElement = this;
+            });
+            var checkboxes = $("#subCategoryOrThemesCheckboxes input[type='checkbox']");
+            checkboxes.on("change", function () {
+                $(focusElement).val(
+                    checkboxes.filter(":checked").map(function (item) {
+                        return this.value;
+                    }).get().join(", ")
+                );
+            });
+        }
+
+        //Select checkboxes for target markets
+        function selectCheckboxesForTargetMarkets() {
+            $("textarea").on("click", function () {
+                $('.targetMarketsCheckbox').prop('checked', false);
+
+                var arrayOfCheckboxItems = $(this).val().split(',');
+                $.each(arrayOfCheckboxItems, function (index, item) {
+                    $("input[type=checkbox][value=" + item.trim() + "]").prop("checked", "true");
+                });
+            });
+        }
+
+        //Populate textarea field for target markets
+        function populateTextAreaForTargetMarkets() {
+            var focusElement = {};
+
+            $("textarea").focus(function () {
+                focusElement = this;
+            });
+            var checkboxes = $("#targetMarketsCheckboxes input[type='checkbox']");
+            checkboxes.on("change", function () {
+                $(focusElement).val(
+                    checkboxes.filter(":checked").map(function (item) {
+                        return this.value;
+                    }).get().join(", ")
+                );
+            });
+        }
+    </script>
+</body>
+</html>

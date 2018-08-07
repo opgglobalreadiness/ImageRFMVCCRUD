@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="ImageRFDBModelStoreContainer" CdmEntityContainer="DBModel">
+    <EntitySetMapping Name="ImageRFTables">
+      <EntityTypeMapping TypeName="ImageRFDBModel.ImageRFTable">
+        <MappingFragment StoreEntitySet="ImageRFTable">
+          <ScalarProperty Name="ImageRFId" ColumnName="ImageRFId" />
+          <ScalarProperty Name="Requestor" ColumnName="Requestor" />
+          <ScalarProperty Name="InquiryCategory" ColumnName="InquiryCategory" />
+          <ScalarProperty Name="TeamName" ColumnName="TeamName" />
+          <ScalarProperty Name="ReviewRequestTitle" ColumnName="ReviewRequestTitle" />
+          <ScalarProperty Name="Details" ColumnName="Details" />
+          <ScalarProperty Name="AliasesToCC" ColumnName="AliasesToCC" />
+          <ScalarProperty Name="ProductReleaseDate" ColumnName="ProductReleaseDate" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping>

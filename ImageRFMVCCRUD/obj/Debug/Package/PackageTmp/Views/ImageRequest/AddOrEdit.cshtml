@@ -1,0 +1,408 @@
+﻿@model ImageRFMVCCRUD.Models.ImageRFTable
+
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>GR: Image Request Form</title>
+    <link href="~/Content/stepwizard.css" rel="stylesheet" />
+
+</head>
+<body>
+    <div class="container" style="width:750px">
+        <div class="stepwizard">
+            <div class="stepwizard-row setup-panel">
+                <div class="stepwizard-step col-xs-3">
+                    <a href="#step-1" type="button" class="btn btn-success btn-circle">1</a>
+                    <p><small>Request Info</small></p>
+                </div>
+                <div class="stepwizard-step col-xs-3">
+                    <a href="#step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
+                    <p><small>Project Info</small></p>
+                </div>
+                <div class="stepwizard-step col-xs-3">
+                    <a href="#step-3" type="button" class="btn btn-default btn-circle" disabled="disabled">3</a>
+                    <p><small>Image Upload Info</small></p>
+                </div>
+                @*<div class="stepwizard-step col-xs-3">
+                    <a href="#step-4" type="button" class="btn btn-default btn-circle" disabled="disabled">4</a>
+                    <p><small>Data Entries</small></p>
+                </div>*@
+            </div>
+        </div>
+
+        @using (Html.BeginForm("AddOrEdit", "ImageRequest", FormMethod.Post, new { onsubmit = "return SubmitForm(this)", style = "width:720px" }))
+        {
+            @Html.HiddenFor(model => model.ImageRFId, new { id = "FieldId" });
+
+            //PANEL 1
+            <div class="panel panel-primary setup-content" id="step-1">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Request Info</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-group col-md-4">
+                                <label for="requestor">Requestor's Name</label>
+                                @Html.TextBoxFor(model => model.Requestor, new { @class = "form-control", @id = "requestor", placeholder = "FirstName LastName" })
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="emailAddress">Email Address</label>
+                                @Html.TextBoxFor(model => model.EmailAddress, new { @class = "form-control", required = "required", @id = "emailaddress", autocomplete="email", placeholder = "someone@microsoft.com" })
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label for="requestDate">Request Date</label>
+                                @Html.TextBoxFor(model => model.DateRequested, new { @class = "form-control", @readonly = "readonly", @Value = @DateTime.Now.ToShortDateString() })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="inquiryCategory">Inquiry Category</label>
+                                @Html.DropDownListFor(model => model.InquiryCategory, new SelectList(new string[] { "Geopolitical Image Review", "Geopolitical Icon Review", "Geopolitical Video Review", "Request A Feature Exemption" }, Model.InquiryCategory), new { @class = "form-control" })
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="garageV1App">For Garage or V1 Apps</label>
+                                <div class="dropdown">
+                                    <button class="btn btn-secondary dropdown-toggle" style="width:314px" type="button" data-toggle="dropdown">
+                                        GR Compliance Assessment
+                                        <span class="caret"></span>
+                                    </button>
+                                    <ul class="dropdown-menu" style="width:314px">
+                                        <li><a href="https://preview.web.powerapps.com/webplayer/app?appId=%2fproviders%2fMicrosoft.PowerApps%2fapps%2fa7c70a5f-65fc-4cc0-a199-36fb079f47f2">Garage Specific Queries</a></li>
+                                        <li><a href="https://preview.web.powerapps.com/webplayer/app?appId=%2fproviders%2fMicrosoft.PowerApps%2fapps%2fa7c70a5f-65fc-4cc0-a199-36fb079f47f2">V1 App GR Compliance Assessment</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.TeamName, "Team Name", new { @class = "control-label" })
+                            <div>
+                                @Html.TextBoxFor(model => model.TeamName, new { @class = "form-control", @id = "teamname" })
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.AliasesToCC, "Aliases To CC", new { @class = "control-label" })
+                            <div>
+                                @Html.TextAreaFor(model => model.AliasesToCC, new { @class = "form-control", rows = 2, columns = 40 })
+                                <label style="font-weight: normal;font-style: italic">(Enter alias string separated by a comma)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            <button class="btn btn-success nextBtn pull-right" type="button">Next Page <i class="fa fa-chevron-circle-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            //PANEL 2
+            <div class="panel panel-primary setup-content" id="step-2">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Project Info</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.ReviewRequestTitle, "Review Request Title", new { @class = "control-label" })
+                            <div>
+                                @Html.TextBoxFor(model => model.ReviewRequestTitle, new { @class = "form-control" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.Details, "Request Details", new { @class = "control-label" })
+                            <div>
+                                @Html.TextAreaFor(model => model.Details, new { @class = "form-control", rows = 3, columns = 40 })
+                                <label style="font-weight: normal;font-style: italic">(Maximum 2000 characters allowed)</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.ProductReleaseDate, "Product Release Date", new { @class = "control-label" })
+                            <div>
+                                @Html.TextBoxFor(model => model.ProductReleaseDate, "{0:yyyy-MM-dd}", new { @class = "form-control", type = "date", data_date_format = "mm/dd/yyyy" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.TargetMarkets, "Target Markets/Countries", new { @class = "control-label" })
+                            <div id="targetMarketList">
+                                <ul class="marketItems">
+                                    @{
+                                        foreach (var item in ViewBag.targetMarketList)
+                                        {
+                                            if (Model.TargetMarkets != null)
+                                            {
+                                                string[] selectedMarkets = Model.TargetMarkets.Split(',');
+                                                bool isFound = false;
+                                                foreach (var market in selectedMarkets)
+                                                {
+                                                    if (market == item.Id.ToString())
+                                                    {
+                                                        isFound = true;
+                                                    }
+                                                }
+                                                if (isFound == true)
+                                                {
+                                                    <li>
+                                                        &nbsp;&nbsp;&nbsp;<input type="checkbox" id="Check_@item.Id" checked />
+                                                        <label for="Check_@item.Id">@item.Name</label>
+                                                    </li>
+                                                }
+                                                else
+                                                {
+                                                    <li>
+                                                        &nbsp;&nbsp;&nbsp;<input type="checkbox" id="Check_@item.Id" checked="@item.IsChecked" />
+                                                        <label for="Check_@item.Id">@item.Name</label>
+                                                    </li>
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <li>
+                                                    &nbsp;&nbsp;&nbsp;<input type="checkbox" id="Check_@item.Id" checked="@item.IsChecked" />
+                                                    <label for="Check_@item.Id">@item.Name</label>
+                                                </li>
+                                            }
+                                        }
+                                    }
+                                    </ul>
+                                    <label for="targetMarkets" style="font-style: italic;font-size: small;"><br />Note: Policheck needs to be run on the localized text - whoever is localizing these images needs to scan any text within</label>
+                            </div>
+                            <div style="display: none">
+                                @Html.TextBoxFor(model => model.TargetMarkets, new { @class = "form-control" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            <button class="btn btn-success nextBtn pull-right" type="button" onclick="SaveTargetMarketList()">Next Page <i class="fa fa-chevron-circle-right"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            // PANEL 3
+            <div class="panel panel-primary setup-content" id="step-3">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Image Upload Info</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.NumberOfImages, "Select the images to be uploaded", new { @class = "control-label" })
+
+                            <div class="input-group">
+                                <label class="input-group-btn">
+                                    <span class="btn btn-primary">
+                                        Browse&hellip; <input type="file" id="fileInput" style="display: none;" multiple>
+                                    </span>
+                                </label>
+                                @Html.TextBoxFor(model => model.NumberOfImages, new { @class = "form-control", @readonly = "readonly" })
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.ListOfFilesUploaded, "Display the list of files to be uploaded", new { @class = "control-label" })
+                            <div>
+                                @Html.TextAreaFor(model => model.ListOfFilesUploaded, new { @class = "form-control", rows = 4, columns = 40, @id = "listofFilesUpload", @readonly = "readonly" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @Html.LabelFor(model => model.UploadedFolderPath, "Click the Upload button to upload the images", new { @class = "control-label" })
+
+                            <div class="input-group">
+                                <label class="input-group-btn">
+                                    <span class="btn btn-danger" id="fileButton">
+                                        Upload
+                                    </span>
+                                </label>
+                                @Html.TextBoxFor(model => model.UploadedFolderPath, new { @class = "form-control", @readonly = "readonly", @id = "uploadFolderPath", @placeholder = "Uploaded folder path info" })
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="form-group col-md-12">
+                            @*<button class="btn btn-success nextBtn pull-right" type="button">Next Page <i class="fa fa-chevron-circle-right"></i></button>*@
+                            <button class="btn btn-success pull-right" type="submit">Submit Form</button>
+                        </div>
+                    </div>
+                </div>
+            </div>           
+        }
+    </div>
+    <script src="~/Scripts/stepwizard.js"></script>
+    <script>
+        $(function () {
+
+            // We can attach the `fileselect` event to all file inputs on the page
+            $(document).on('change', ':file', function () {
+                var input = $(this),
+                    numFiles = input.get(0).files ? input.get(0).files.length : 1,
+                    label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+                input.trigger('fileselect', [numFiles, label]);
+            });
+
+            // We can watch for our custom `fileselect` event like this
+            $(document).ready(function () {
+                $(':file').on('fileselect', function (event, numFiles, label) {
+
+                    var input = $(this).parents('.input-group').find(':text'),
+                        log = numFiles > 0 ? numFiles + ' files selected' : label;
+
+                    var files = $('#fileInput').prop("files");
+                    var names = $.map(files, function (val) { return val.name; });
+
+                    $('#listofFilesUpload').val(function () {
+                        return names
+                    });
+
+                    if (input.length) {
+                        input.val(log);
+                    } else {
+                        if (log) alert(log);
+                    }
+                });
+
+                // Image Upload
+                $("#fileButton").click(function () {
+                    var files = $("#fileInput").get(0).files;
+                    var foldername = $("#fileInput").get(0).foldername;
+                    var fileData = new FormData();
+
+                    for (var i = 0; i < files.length; i++) {
+                        fileData.append(files[i].name, files[i]);
+                    }
+                    //Image Request Form ID
+                    var reqDate = $.datepicker.formatDate('yy-mm-dd', new Date());
+                    var targetFolderName = $("#teamname").val() + "_" + $("#requestor").val() + "_" + reqDate;
+                    //var imgRFID = $("#FieldId").val();
+                    var uploadFolderPath = "https://globalreadinessfileshare.file.core.windows.net/imagereview" + "/" + targetFolderName.replace(/ /g, '');
+
+                    $.ajax({
+                        type: "POST",
+                        url: "/ImageRequest/UploadFiles/" + targetFolderName,
+                        dataType: "json",
+                        contentType: false, // Not to set any content header
+                        processData: false, // Not to process data
+                        data: fileData,
+                        success: function (result, status, xhr) {
+                            alert(result);
+                        },
+                        error: function (xhr, status, error) {
+                            alert(status);
+                        }
+                    });
+
+                    $("#uploadFolderPath").val(uploadFolderPath);
+                    
+                });
+
+                $(document).ajaxStart(function () {
+                    ////$("#loadingImg").show();
+                    $("#fileButton").prop('disabled', true);
+                });
+
+                $(document).ajaxStop(function () {
+                    //$("#loadingImg").hide();
+                    $("#fileButton").prop('disabled', false);
+                    $("#fileInput").val("");
+                });
+
+            });
+
+        });
+
+        //Target Markets Checkbox
+        var SaveTargetMarketList = function () {
+            var arrItem = [];
+            var commaSeparatedIds = "";
+            $("#targetMarketList input[type=checkbox]").each(function (index, val) {
+                var checkID = $(val).attr("Id");
+                var arr = checkID.split('_');
+                var currentCheckboxId = arr[1];
+
+                var IsChecked = $("#" + checkID).is(":checked", true);
+                if (IsChecked) {
+                    arrItem.push(currentCheckboxId);
+                }
+            })
+
+            if (arrItem.length != 0) {
+                commaSeparatedIds = arrItem.toString();
+                $.ajax({
+
+                    url: "/ImageRequest/SaveTargetMarketList",
+                    type: "POST",
+                    data: { targetMarketList: commaSeparatedIds },
+                    success: function (response) {
+                        //code here
+                        //alert(data);
+                    }
+
+                })
+                $("#TargetMarkets").val(commaSeparatedIds);
+            }
+        }
+
+        //Review Sub Categories or Themes Checkbox
+        var ReviewSubCategoriesOrThemesList = function () {
+            var arrItemTheme = [];
+            var commaSeparatedIdsTheme = "";
+            $("#subCategoryOrThemesList input[type=checkbox]").each(function (index, val) {
+                var checkID = $(val).attr("Id");
+                var arr = checkID.split('_');
+                var currentCheckboxId = arr[1];
+
+                var IsChecked = $("#" + checkID).is(":checked", true);
+                if (IsChecked) {
+                    arrItemTheme.push(currentCheckboxId);
+                }
+            })
+
+            if (arrItemTheme.length != 0) {
+                commaSeparatedIdsTheme = arrItemTheme.toString();
+                $.ajax({
+
+                    url: "/ImageRequest/ReviewSubCategoriesOrThemesList",
+                    type: "POST",
+                    data: { subCategoryOrThemesList: commaSeparatedIdsTheme },
+                    success: function (response) {
+                        //code here
+                        //alert(data);
+                    }
+
+                })
+                $("#ReviewSubCategoriesOrThemes").val(commaSeparatedIdsTheme);
+            }
+        }
+    </script>
+
+</body>
+</html>

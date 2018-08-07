@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="ImageRFDBModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012.Azure" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="ImageRFTable">
+          <Key>
+            <PropertyRef Name="ImageRFId" />
+          </Key>
+          <Property Name="ImageRFId" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Requestor" Type="nvarchar" MaxLength="100" />
+          <Property Name="InquiryCategory" Type="nvarchar" MaxLength="100" />
+          <Property Name="TeamName" Type="nvarchar" MaxLength="100" />
+          <Property Name="ReviewRequestTitle" Type="nvarchar" MaxLength="100" />
+          <Property Name="Details" Type="nvarchar" MaxLength="2000" />
+          <Property Name="DateRequested" Type="datetime2" Precision="7" Nullable="false" />
+          <Property Name="AliasesToCC" Type="nvarchar" MaxLength="250" />
+          <Property Name="ProductReleaseDate" Type="datetime2" Precision="7" />
+          <Property Name="TargetMarkets" Type="nvarchar" MaxLength="250" />
+          <Property Name="NumberOfImages" Type="nvarchar" MaxLength="50" />
+          <Property Name="ListOfFilesUploaded" Type="nvarchar(max)" />
+          <Property Name="UploadedFolderPath" Type="nvarchar" MaxLength="200" />
+          <Property Name="ModifiedBy" Type="nvarchar" MaxLength="100" />
+          <Property Name="ModifiedDate" Type="datetime2" Precision="7" />
+          <Property Name="EmailAddress" Type="nvarchar" MaxLength="150" />
+        </EntityType>
+        <EntityContainer Name="ImageRFDBModelStoreContainer">
+          <EntitySet Name="ImageRFTable" EntityType="Self.ImageRFTable" Schema="dbo" store:Type="Tables" />
+        </EntityContainer>
+      </Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="ImageRFDBModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+          <EntityType Name="ImageRFTable">
+              <Key>
+                  <PropertyRef Name="ImageRFId" />
+              </Key>
+              <Property Name="ImageRFId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+              <Property Name="Requestor" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+              <Property Name="InquiryCategory" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+              <Property Name="TeamName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+              <Property Name="ReviewRequestTitle" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+              <Property Name="Details" Type="String" MaxLength="2000" FixedLength="false" Unicode="true" />
+              <Property Name="DateRequested" Type="DateTime" Precision="7" Nullable="false" />
+              <Property Name="AliasesToCC" Type="String" MaxLength="250" FixedLength="false" Unicode="true" />
+              <Property Name="ProductReleaseDate" Type="DateTime" Precision="7" />
+              <Property Name="TargetMarkets" Type="String" MaxLength="250" FixedLength="false" Unicode="true" />
+              <Property Name="NumberOfImages" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+              <Property Name="ListOfFilesUploaded" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+              <Property Name="UploadedFolderPath" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+          <Property Name="ModifiedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+          <Property Name="ModifiedDate" Type="DateTime" Precision="7" />
+          <Property Name="EmailAddress" Type="String" MaxLength="150" FixedLength="false" Unicode="true" />
+          </EntityType>
+        <EntityContainer Name="DBModels2" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="ImageRFTables" EntityType="Self.ImageRFTable" />
+        </EntityContainer>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="ImageRFDBModelStoreContainer" CdmEntityContainer="DBModels2">
+          <EntitySetMapping Name="ImageRFTables">
+            <EntityTypeMapping TypeName="ImageRFDBModel.ImageRFTable">
+              <MappingFragment StoreEntitySet="ImageRFTable">
+                <ScalarProperty Name="EmailAddress" ColumnName="EmailAddress" />
+                <ScalarProperty Name="ModifiedDate" ColumnName="ModifiedDate" />
+                <ScalarProperty Name="ModifiedBy" ColumnName="ModifiedBy" />
+                <ScalarProperty Name="UploadedFolderPath" ColumnName="UploadedFolderPath" />
+                <ScalarProperty Name="ListOfFilesUploaded" ColumnName="ListOfFilesUploaded" />
+                <ScalarProperty Name="NumberOfImages" ColumnName="NumberOfImages" />
+                <ScalarProperty Name="TargetMarkets" ColumnName="TargetMarkets" />
+                <ScalarProperty Name="ImageRFId" ColumnName="ImageRFId" />
+                <ScalarProperty Name="Requestor" ColumnName="Requestor" />
+                <ScalarProperty Name="InquiryCategory" ColumnName="InquiryCategory" />
+                <ScalarProperty Name="TeamName" ColumnName="TeamName" />
+                <ScalarProperty Name="ReviewRequestTitle" ColumnName="ReviewRequestTitle" />
+                <ScalarProperty Name="Details" ColumnName="Details" />
+                <ScalarProperty Name="DateRequested" ColumnName="DateRequested" />
+                <ScalarProperty Name="AliasesToCC" ColumnName="AliasesToCC" />
+                <ScalarProperty Name="ProductReleaseDate" ColumnName="ProductReleaseDate" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="False" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="False" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

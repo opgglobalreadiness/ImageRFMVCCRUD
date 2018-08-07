@@ -1,0 +1,732 @@
+﻿@model ImageRFMVCCRUD.Models.ImageRFTable
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GR: Image Reviewer Tool</title>
+    <style>
+        /* CSS used here will be applied after bootstrap.css */
+
+        th {
+            font-size: 14px;
+            font-weight: bold;
+        }
+        td {
+            padding-right: 10px;
+            vertical-align: top;
+            padding-bottom: 10px;
+        }
+        td img {
+            width: 200px;
+            height: 165px;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        .table thead tr th{
+            border-bottom: 1px solid #ff6a00;
+        }
+        div.container a.input-group-btn {
+            font-size: 14px;
+        }
+
+    </style>
+
+</head>
+<body>
+    @*<div class="container">
+        <div class="row">
+            <div class="page-header" style="padding-bottom:10px;border-bottom:1px solid #ff6a00 ">
+                <h2>Global Readiness: Image Reviewer Tool (work in progress...)</h2>
+            </div>
+
+            <!-- Modified By and Modified Date -->
+            <div style="margin-left:0px">
+                @using (Html.BeginForm("Review", "ImageRequest", FormMethod.Post, new { onsubmit = "return SubmitReviewForm(this)", id = "ImageReviewForm" }))
+                {
+                    <div style="padding-bottom:78px;border-bottom:1px solid #ff6a00;margin-bottom: 5px;margin-top:10px">
+
+                        <div class="form-group col-md-2" style="margin-left: -10px">
+                            <label for="requestor">Modified by</label>
+                            <input type="text" class="form-control" id="modifiedBy" />
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label for="requestDate">Modified Date</label>
+                            <input type="text" class="form-control" id="modifiedDate" value="@DateTime.Now.ToShortDateString()" readonly />
+                        </div>
+
+                        <div class="form-group col-md-2">
+                            <label for="requestDate">Export to Excel</label><br />
+                            <input class="btn btn-secondary" type="button" value="Export All Data to Excel">
+                        </div>
+                        <div class="form-group col-md-4">
+                            <label for="requestDate">Search</label><br />
+                            <form action="#" method="get">
+                                <div class="input-group">
+                                    <!-- USE TWITTER TYPEAHEAD JSON WITH API TO SEARCH -->
+                                    <input class="form-control" id="system-search" name="q" placeholder="Search for" required>
+                                </div>
+                            </form>
+                        </div>
+
+                    </div>
+
+                    <div>
+                        <table id="ReviewEntryJson"></table>
+                    </div>
+
+                    <div class="form-group col-md-12">
+                        <button class="btn btn-success pull-right" id="btn-save-form" type="submit">Save Form</button>
+                    </div>
+
+                }
+            </div>
+        </div>
+    </div>*@
+
+    <script>
+
+        //Themes and SubCategories Config setting
+        var themeDialog = {
+            autoOpen: false,
+            modal: true,
+            width: 645,
+            title: "Themes or Subcategories",
+
+            open: function () {
+                selectCheckboxesForThemesOrCategories();
+                    populateTextAreaForThemesOrCategories();
+                $(this).find('.error').hide();
+                    },
+
+            buttons: {
+                'Ok': function () {
+                    $(this).dialog('close');
+                    },
+                'Cancel': function () {
+                    $(this).dialog('close');
+                    }
+                }
+        };
+
+
+        //Target Markets Config setting
+        var targetMarkets = {
+            autoOpen: false,
+            modal: true,
+            width: 345,
+            title: "Target Markets",
+
+            open: function () {
+                selectCheckboxesForTargetMarkets();
+                populateTextAreaForTargetMarkets();
+               $(this).find('.error').hide();
+            },
+
+            buttons: {
+                'Ok': function () {
+                    $(this).dialog('close');
+                },
+                'Cancel': function () {
+                    $(this).dialog('close');
+                }
+            }
+        };
+
+        //function make_json(form) {
+        //    var json = {
+        //        "ModifiedBy" : form.modifiedBy.value
+        //    }
+        //    var html = JSON.stringify(json, 0, 4);
+        //    document.getElementById("output").innerHTML = html;
+        //    return false;
+        //}
+
+        $(document).ready(function () {
+
+            //Submit form
+            $("#btn-save-form").click(function (e) {
+                e.preventDefault();
+                var modified_By = $("#modifiedBy").val();
+                var modified_Date = $("#modifiedDate").val();
+                var designer_Comments = $("#designerComments").val();
+                $.ajax({
+                    type: 'POST',
+                    //data: {
+                    //    _modifiedBy : modified_By,
+                    //    _modifiedDate: modified_Date,
+                    //    _designerComments: designer_Comments,
+                    //},
+                    data: $('#ImageReviewForm').serialize(),
+                    url: "/ImageRequest/ReviewTest/",
+                    success: function (data) {
+                        alert(data);
+                    }
+                });
+            })
+
+            //$("#btn-save-form").click(function (e) {
+            //    e.preventDefault();
+            //    var imageFormData = $("#ImageReviewForm").serialize();
+            //    for (var i = 0; i < imageFormData.length; i++) {
+            //        console.log(imageFormData[i]);
+            //    }
+            //})
+
+
+            //Expand and Collapse
+            $('a[data-toggle="collapse"]').on('click', function () {
+
+                var objectID = $(this).attr('href');
+
+                if ($(objectID).hasClass('in') === false) {
+                    $(objectID).collapse('show');
+                }
+                else {
+                    $(objectID).collapse('hide');
+                }
+            });
+
+            $('#expandAll').on('click', function () {
+
+                $('a[data-toggle="collapse"]').each(function () {
+                    var objectID = $(this).attr('href');
+                    if ($(objectID).hasClass('in') === false) {
+                        $(objectID).collapse('show');
+                    }
+                });
+            });
+
+            $('#collapseAll').on('click', function () {
+
+                $('a[data-toggle="collapse"]').each(function () {
+                    var objectID = $(this).attr('href');
+                    $(objectID).collapse('hide');
+                });
+            });
+
+            //Retrieved from JSON File
+            var htmlTBody = "";
+
+            $.ajax({
+                "url": '@ViewBag.jsonFile',
+                "dataType": 'json',
+                "type": 'GET',
+                "success": function (images) {
+                    //console.log('success', images);
+                    htmlTBody += "<div class=\"container\">";
+                    htmlTBody += "<div class=\"row\">";
+                    htmlTBody += "<div class=\"page-header\" style=\"padding-bottom:10px;border-bottom:1px solid #ff6a00 \">";
+                    htmlTBody += "<h2>Global Readiness: Image Reviewer Tool (work in progress...)</h2>";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<div style=\"margin-left:0px\">";
+                    htmlTBody += "<form action=\"/ImageRequest/Review/1\" id=\"ImageReviewForm\" method=\"post\" onsubmit=\"return SubmitReviewForm(this)\">";
+                    htmlTBody += "{";
+                    htmlTBody += "<div style=\"padding-bottom:78px;border-bottom:1px solid #ff6a00;margin-bottom: 5px;margin-top:10px\">";
+                    htmlTBody += "<div class=\"form-group col-md-2\" style=\"margin-left: -10px\">";
+                    htmlTBody += "<label for=\"requestor\">Modified by</label>";
+                    htmlTBody += "<input type=\"text\" class=\"form-control\" id=\"modifiedBy\" />";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<div class=\"form-group col-md-2\">";
+                    htmlTBody += "<label for=\"requestDate\">Modified Date</label>";
+                   //htmlTBody += "<input type=\"text\" class=\"form-control\" id=\"modifiedDate\" value=\"" + DateTime.Now.ToShortDateString() + "\" readonly />";
+                    htmlTBody += "<input type=\"text\" class=\"form-control\" id=\"modifiedDate\" value=\"\" readonly />";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<div class=\"form-group col-md-2\">";
+                    htmlTBody += "<label for=\"requestDate\">Export to Excel</label><br />";
+                    htmlTBody += "<input class=\"btn btn-secondary\" type=\"button\" value=\"Export All Data to Excel\">";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<div class=\"form-group col-md-4\">";
+                    htmlTBody += "<label for=\"requestDate\">Search</label><br />";
+                    htmlTBody += "<form action=\"#\" method=\"get\">";
+                    htmlTBody += "<div class=\"input-group\">";
+                    htmlTBody += "<input class=\"form-control\" id=\"system-search\" name=\"q\" placeholder=\"Search for\" required>";
+                    htmlTBody += "</div>";
+                    htmlTBody += "</form>";
+                    htmlTBody += "</div>";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<div>";
+                    htmlTBody += "<table id=\"ReviewEntryJson\"></table>";
+                    htmlTBody += "</div>";
+                    htmlTBody += "<table class=\"table table-list-search\">";
+                    htmlTBody += "<thead>";
+                    htmlTBody += "<th width=\"150px\">INFO</th>";
+                    htmlTBody += "<th>IMAGE</th>";
+                    htmlTBody += "<th width=\"170px\">COMMENTS</th>";
+                    htmlTBody += "<th width=\"90px\">SIGNOFF</th>";
+                    htmlTBody += "<th width=\"170px\">REVIEW COMMENTS</th>";
+                    htmlTBody += "<th width=\"150px\">SIGNOFF</th>";
+                    htmlTBody += "<th width=\"190px\">REJECT INFO</th>";
+                    htmlTBody += "</thead>";
+                    htmlTBody += "<tbody>";
+                    $.each(images.Metadata, function (i, image) {
+                        htmlTBody += "<tr>";
+                        htmlTBody += "<td style=\"width:150px;\">";
+                        htmlTBody += "<div style=\"margin-left:0px;margin-top:5px;font-size: small\">";
+                        htmlTBody += "<span class=\"small\" style=\"text-decoration: underline;\">Image Id:</span><br/>";
+                        htmlTBody += "<span class=\"small\">" + image.Id + "</span><br /><br />";
+                        htmlTBody += "<span class=\"small\" style=\"margin-top:25px;text-decoration: underline;\">Image Name: </span><br/>";
+                        htmlTBody += "<span class=\"small\">" + image.Filename + "</span><br /><br />";
+                        htmlTBody += "<span class=\"small\" style=\"margin-top:25px;text-decoration: underline;\">Comments: </span><br/>";
+                        htmlTBody += "<span class=\"small\">" + image.Comments + "</span>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td><a href='" + image.Images + "' target=\"_blank\"><img id=\"bigImage\" src=\"" + image.Images + "\"</img></a></td>";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-bottom:5px\">";
+                        htmlTBody += "<span class=\"small\">Designer Comments</span>";
+                        htmlTBody += "<textarea id=\"designerComments\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.DesignerComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:10px\">";
+                        htmlTBody += "<span class=\"small\">CELA Comments</span>";
+                        htmlTBody += "<textarea class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.CelaComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-left:0px;margin-top:20px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"DesignerSignoff_accepted\" name=\"DesignerSignoff\" value=\"accepted\"/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"DesignerSignoff_rejected\" name=\"DesignerSignoff\" value=\"rejected\"/>Rejected";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" id=\"DesignerSignoff_pending\" name=\"DesignerSignoff\" value=\"pending\"/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:42px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom: 0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"CelaSignoff\" value=\"accepted\"/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"CelaSignoff\" value=\"rejected\"/>Rejected";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom: 0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"CelaSignoff\" value=\"pending\"/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-bottom:5px\">";
+                        htmlTBody += "<span class=\"small\">GeoPol Comments</span>";
+                        htmlTBody += "<textarea class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.GeopolFullMarketComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:10px\">";
+                        htmlTBody += "<span class=\"small\">Moravia Comments</span>";
+                        htmlTBody += "<textarea class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.CelaComments + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td style=\"width:135px\">";
+                        htmlTBody += "<div style=\"margin-left:0px;margin-top:15px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"GeopolFullMarketSignoff\" value=\"accepted\"/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"GeopolFullMarketSignoff\" value=\"pending\"/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"GeopolFullMarketSignoff\" value=\"sev1\"/>S1&nbsp;&nbsp;<input type=\"radio\" name=\"GeopolFullMarketSignoff\" value=\"sev2\"/>S2&nbsp;<br />";
+                        htmlTBody += "<input type=\"radio\" name=\"GeopolFullMarketSignoff\" value=\"sev3\"/>S3&nbsp;&nbsp;<input type=\"radio\" name=\"GeopolFullMarketSignoff\" value=\"sev4\"/>S4";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:25px;font-size: small\">";
+                        htmlTBody += "<label style=\"margin-bottom: 0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"MoraviaSignoff\" value=\"accepted\"/>Accepted";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"MoraviaSignoff\" value=\"pending\"/>Pending";
+                        htmlTBody += "</label>";
+                        htmlTBody += "<br />";
+                        htmlTBody += "<label style=\"margin-bottom:0px\" class=\"small\">";
+                        htmlTBody += "<input type=\"radio\" name=\"MoraviaSignoff\" value=\"sev1\"/>S1&nbsp;&nbsp;<input type=\"radio\" name=\"MoraviaSignoff\" value=\"sev2\"/>S2&nbsp;<br />";
+                        htmlTBody += "<input type=\"radio\" name=\"MoraviaSignoff\" value=\"sev3\"/>S3&nbsp;&nbsp;<input type=\"radio\" name=\"MoraviaSignoff\" value=\"sev4\"/>S4";
+                        htmlTBody += "</label>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+                        htmlTBody += "<td>";
+                        htmlTBody += "<div style=\"margin-bottom:5px\">";
+                        htmlTBody += "<span class=\"small\">Themes and Subcategories</span>";
+                        htmlTBody += "<textarea id=\"themeCategoriesID\" onclick=\"$('#themesSubCategoriesDialog').dialog(themeDialog).dialog('open'); return false;\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.ThemeCategories + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "<div style=\"margin-top:10px\">";
+                        htmlTBody += "<span class=\"small\">Target Markets</span>";
+                        htmlTBody += "<textarea id=\"targetMarketsID\" onclick=\"$('#targetMarketsDialog').dialog(targetMarkets).dialog('open'); return false;\" class=\"form-control\" style=\"width: 170px; height: 80px;\">" + image.TargetMarkets + "</textarea>";
+                        htmlTBody += "</div>";
+                        htmlTBody += "</td>";
+
+                        htmlTBody += "</tr>";
+
+                        //DesignerSignoff radio button
+                        //$("#DesignerSignoff_" + image.DesignerSignoff + "").prop("checked", true);
+
+                        //CelaSignoff radio button
+                        //$('input[name=DesignerSignoff][value=' + image.CelaSignoff + ']').prop('checked', true);
+
+                        //GeopolFullMarketSignoff radio button
+                        //$('input[name=DesignerSignoff][value=' + image.GeopolFullMarketSignoff + ']').prop('checked', true);
+
+                    });
+                    htmlTBody += "</tbody>";
+                    htmlTBody += "</table>";
+                    htmlTBody += "<div class=\"form-group col-md-12\">";
+                    htmlTBody += "<button class=\"btn btn-success pull-right" id =\"btn-save-form" type =\"submit\">Save Form</button>";
+                    htmlTBody += "</div>";
+                    htmlTBody += "}";
+                    htmlTBody += "</div>";
+                    htmlTBody += "</div>";
+                    htmlTBody += "</div>";
+                    $(htmlTBody).appendTo('#ReviewEntryJson');
+                    $("#modifiedBy").val(images.ModifiedBy);
+                    //$("#modifiedDate").val(images.ModifiedDate);
+
+
+                    //Write output to the html page
+                    //$(html).appendTo('#ReviewEntryJson');
+
+                },
+                "error": function () {
+                    alert("Error encountered");
+                }
+            });
+
+            //Target Markets
+            $('body').append(
+                '<div id="targetMarketsDialog" title="Target Markets" class="ui-helper-hidden">' +
+                '<p class="error">' +
+                '<span class="ui-icon ui-icon-alert">&nbsp;</span>' +
+                '<span class="message">&nbsp;</span>' +
+                '</p>' +
+                '<div>' +
+                '<label>Please select the appropriate checkboxes</label>' +
+                '<div class="block_brake">&nbsp;</div>' +
+                '<div id="targetMarketsCheckboxes">' +
+                '<table class="table-sm">' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Global_Release" value="Global_Release">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_1">&nbsp;Global Release</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_US-only_Release" value="US-only_Release">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_2">&nbsp;US-only Release</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Western_Markets" value="Western_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_5">&nbsp;Western Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Asian_Markets" value="Asian_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_8">&nbsp;Asian Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td colspan="2" style="width: 300px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_Latin-American_Markets" value="Latin-American_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_10">&nbsp;Latin-American Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td colspan="2 " style="width: 300px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="targetMarketsCheckbox" id="targetMarkets_African_Middle_Eastern_Markets" value="African/Middle_Eastern_Markets">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_10">&nbsp;African/Middle Eastern Markets</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '</table>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+
+            //Themes and Subcategories
+            $('body').append(
+                '<div id="themesSubCategoriesDialog" title="Themes or Subcategories" class="ui-helper-hidden">' +
+                '<p class="error">' +
+                '<span class="ui-icon ui-icon-alert">&nbsp;</span>' +
+                '<span class="message">&nbsp;</span>' +
+                '</p>' +
+                '<div>' +
+                '<label>Please select the appropriate checkboxes</label>' +
+                '<div class="block_brake">&nbsp;</div>' +
+                '<div id="subCategoryOrThemesCheckboxes">' +
+                '<table class="table-sm">' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Alcohol" value="Alcohol">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_1">&nbsp;Alcohol</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Animals" value="Animals">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_2">&nbsp;Animals</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Closing" value="Clothing">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_3">&nbsp;Clothing</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Cultural" value="Cultural">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_4">&nbsp;Cultural</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Creatures" value="Creatures">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_5">&nbsp;Creatures</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Ethnic_diversity" value="Ethnic_Diversity">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_8">&nbsp;Ethnic diversity</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Fictitious_Content" value="Fictitious_Content">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_13">&nbsp;Fictitious Content</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Gender_diversity" value="Gender_Diversity">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_7">&nbsp;Gender diversity</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Globes_Flags_Maps" value="Globes_Flags_Maps">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_10">&nbsp;Globes/flags/Maps</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Hands_Feet" value="Hands_and_Feet">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_11">&nbsp;Hands & feet</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Landmarks" value="Landmarks">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_12">&nbsp;Landmarks</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Logos_Symbols" value="Logos_and_Symbols">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_9">&nbsp;Logos & Symbols</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Religion" value="Religion">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_14">&nbsp;Religion</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Text" value="Text">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_15">&nbsp;Text</label>' +
+                '</span>' +
+                '</td>' +
+                '<td style="width: 160px;height: 25px;">' +
+                '<span>' +
+                '<input type="checkbox" class="themeCheckbox" id="ThemeCheck_Violence" value="Violence">' +
+                '<label style="margin-bottom: 0px" for="ThemeCheck_16">&nbsp;Violence</label>' +
+                '</span>' +
+                '</td>' +
+                '</tr>' +
+                '</table>' +
+                '</div>' +
+                '</div>' +
+                '</div>'
+            );
+
+            //Themes or Subcategories Config setting
+            $('#themesSubCategoriesDialog').dialog({
+                autoOpen: false,
+                modal: true,
+                width: 645,
+
+                open: function () {
+                    $(this).find('.error').hide();
+                },
+
+                buttons: {
+                    'Ok': function () {
+                        selectCheckboxesForThemesOrCategories();
+                        populateTextAreaForThemesOrCategories();
+                        $(this).dialog('close');
+                    },
+                    'Cancel': function () {
+                        $(this).dialog('close');
+                        $(this).find('form')[0].reset();
+                    }
+                }
+            });
+
+
+            //Target Markets Config setting
+            $('#targetMarketsDialog').dialog({
+                autoOpen: false,
+                modal: true,
+                width: 345,
+
+                open: function () {
+                    $(this).find('.error').hide();
+                },
+
+                buttons: {
+                    'Ok': function () {
+                        selectCheckboxesForTargetMarkets();
+                        populateTextAreaForTargetMarkets();
+                        $(this).dialog('close');
+                    },
+                    'Cancel': function () {
+                        $(this).dialog('close');
+                        $(this).find('form')[0].reset();
+
+                    }
+                }
+            });
+
+            //Search
+            var activeSystemClass = $('.list-group-item.active');
+
+            //something is entered in search form
+            $('#system-search').keyup(function () {
+                var that = this;
+                // affect all table rows on in systems table
+                var tableBody = $('.table-list-search tbody');
+                var tableRowsClass = $('.table-list-search tbody tr');
+                $('.search-sf').remove();
+                tableRowsClass.each(function (i, val) {
+
+                    //Lower text for case insensitive
+                    var rowText = $(val).text().toLowerCase();
+                    var inputText = $(that).val().toLowerCase();
+                    if (inputText != '') {
+                        $('.search-query-sf').remove();
+                        tableBody.prepend('<tr class="search-query-sf"><td colspan="6"><strong>Searching for: "'
+                            + $(that).val()
+                            + '"</strong></td></tr>');
+                    }
+                    else {
+                        $('.search-query-sf').remove();
+                    }
+
+                    if (rowText.indexOf(inputText) == -1) {
+                        //hide rows
+                        tableRowsClass.eq(i).hide();
+
+                    }
+                    else {
+                        $('.search-sf').remove();
+                        tableRowsClass.eq(i).show();
+                    }
+                });
+                //all tr elements are hidden
+                if (tableRowsClass.children(':visible').length == 0) {
+                    tableBody.append('<tr class="search-sf"><td class="text-muted" colspan="6">No entries found.</td></tr>');
+                }
+            });
+
+
+        });
+
+        //Select checkboxes for themes or subcategories
+        function selectCheckboxesForThemesOrCategories() {
+            $("textarea").on("click", function () {
+                $('.themeCheckbox').prop('checked', false);
+
+                var arrayOfCheckboxItems = $(this).val().split(',');
+                $.each(arrayOfCheckboxItems, function (index, item) {
+                    $("input[type=checkbox][value=" + item.trim() + "]").prop("checked", "true");
+                });
+            });
+        }
+
+        //Populate textarea field for themes or subcategories
+        function populateTextAreaForThemesOrCategories() {
+            var focusElement = {};
+
+            $("textarea").focus(function () {
+                focusElement = this;
+            });
+            var checkboxes = $("#subCategoryOrThemesCheckboxes input[type='checkbox']");
+            checkboxes.on("change", function () {
+                $(focusElement).val(
+                    checkboxes.filter(":checked").map(function (item) {
+                        return this.value;
+                    }).get().join(", ")
+                );
+            });
+        }
+
+        //Select checkboxes for target markets
+        function selectCheckboxesForTargetMarkets() {
+            $("textarea").on("click", function () {
+                $('.targetMarketsCheckbox').prop('checked', false);
+
+                var arrayOfCheckboxItems = $(this).val().split(',');
+                $.each(arrayOfCheckboxItems, function (index, item) {
+                    $("input[type=checkbox][value=" + item.trim() + "]").prop("checked", "true");
+                });
+            });
+        }
+
+        //Populate textarea field for target markets
+        function populateTextAreaForTargetMarkets() {
+            var focusElement = {};
+
+            $("textarea").focus(function () {
+                focusElement = this;
+            });
+            var checkboxes = $("#targetMarketsCheckboxes input[type='checkbox']");
+            checkboxes.on("change", function () {
+                $(focusElement).val(
+                    checkboxes.filter(":checked").map(function (item) {
+                        return this.value;
+                    }).get().join(", ")
+                );
+            });
+        }
+    </script>
+</body>
+</html>

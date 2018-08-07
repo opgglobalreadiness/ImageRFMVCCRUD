@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<parameters>
+  <parameter name="DBModels2-Web.config Connection String" description="DBModels2 Connection String used in web.config by the application to access the database." defaultValue="Data Source=tcp:opgglobal.database.windows.net,1433;Initial Catalog=ImageRFDatabase;Persist Security Info=False;User ID=opgglobal;Password=OPG.Gl0bal;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" tags="SqlConnectionString">
+    <parameterEntry kind="XmlFile" scope="C:\\Users\\jchoe\.REDMOND\\source\\repos\\ImageRFMVCCRUD\\ImageRFMVCCRUD\\obj\\Debug\\Package\\PackageTmp\\Web\.config$" match="/configuration/connectionStrings/add[@name='DBModels2']/@connectionString" />
+  </parameter>
+</parameters>

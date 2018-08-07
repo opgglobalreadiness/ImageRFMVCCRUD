@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="ImageRFDBModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+  <EntityType Name="ImageRFTable">
+    <Key>
+      <PropertyRef Name="ImageRFId" />
+    </Key>
+    <Property Name="ImageRFId" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+    <Property Name="Requestor" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+    <Property Name="InquiryCategory" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+    <Property Name="TeamName" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+    <Property Name="ReviewRequestTitle" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+    <Property Name="Details" Type="String" MaxLength="2000" FixedLength="false" Unicode="true" />
+    <Property Name="DateRequested" Type="DateTime" Precision="7" Nullable="false" />
+    <Property Name="AliasesToCC" Type="String" MaxLength="250" FixedLength="false" Unicode="true" />
+    <Property Name="ProductReleaseDate" Type="DateTime" Precision="7" />
+    <Property Name="TargetMarkets" Type="String" MaxLength="250" FixedLength="false" Unicode="true" />
+    <Property Name="NumberOfImages" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+    <Property Name="ListOfFilesUploaded" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+    <Property Name="UploadedFolderPath" Type="String" MaxLength="200" FixedLength="false" Unicode="true" />
+    <Property Name="ModifiedBy" Type="String" MaxLength="100" FixedLength="false" Unicode="true" />
+    <Property Name="ModifiedDate" Type="DateTime" Precision="7" />
+    <Property Name="EmailAddress" Type="String" MaxLength="150" FixedLength="false" Unicode="true" />
+  </EntityType>
+  <EntityContainer Name="DBModels2" annotation:LazyLoadingEnabled="true">
+    <EntitySet Name="ImageRFTables" EntityType="Self.ImageRFTable" />
+  </EntityContainer>
+</Schema>

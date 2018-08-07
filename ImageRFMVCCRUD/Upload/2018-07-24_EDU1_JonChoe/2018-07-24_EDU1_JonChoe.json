@@ -1,0 +1,70 @@
+{
+"ModifiedBy": "Jon C. Choe",
+"ModifiedDate": "8/6/2018",
+"Metadata": [
+{
+"Id": "1",
+"Filename": "xyz.jpg",
+"Comments": "This image is for en-US only. Not to be used anywhere else.",
+"Images": "http://globalreadinessfileshare.blob.core.windows.net/imagereview/2018-07-24_EDU1_JonChoe/johndoe.jpg?sv=2014-02-14&sr=b&sig=WXFMzb63DyEbNmqaSXSCPCfjRnCTbBqvvfxOivYVDis%3D&st=2018-07-25T04%3A50%3A51Z&se=2023-07-25T04%3A55%3A51Z&sp=rw",
+"DesignerComments": "This image is great1",
+"CelaComments": "This image is OK.1",
+"DesignerSignoff": "accepted",
+"CelaSignoff": "pending",
+"GeopolFullMarketComments": "This image is bad2",
+"LSPComments": "This image is bad2",
+"GeopolFullMarketSignoff": "sev4",
+"LSPSignoff": "accepted",
+"ThemeCategories": "Clothing, Cultural",
+"TargetMarkets": "Global_Release"
+},
+{
+"Id": "2",
+"Filename": "Picture14.png",
+"Comments": "This image is for en-US only",
+"Images": "http://globalreadinessfileshare.blob.core.windows.net/imagereview/2018-07-24_EDU1_JonChoe/Picture14.png?sv=2014-02-14&sr=b&sig=ishD3E1yxMXQfPuz%2BjuRX%2FrvTNvYUqIQmOJMZU22NG8%3D&st=2018-07-25T04%3A50%3A51Z&se=2023-07-25T04%3A55%3A51Z&sp=rw",
+"DesignerComments": "This image is great1",
+"CelaComments": "This image is OK.1",
+"DesignerSignoff": "pending",
+"CelaSignoff": "accepted",
+"GeopolFullMarketComments": "This image is bad2",
+"LSPComments": "This image is bad2",
+"GeopolFullMarketSignoff": "pending",
+"LSPSignoff": "sev1",
+"ThemeCategories": "Animals, Text",
+"TargetMarkets": "Global_Release, Western_Markets"
+},
+{
+"Id": "3",
+"Filename": "Picture17.png",
+"Comments": "",
+"Images": "http://globalreadinessfileshare.blob.core.windows.net/imagereview/2018-07-24_EDU1_JonChoe/Picture17.png?sv=2014-02-14&sr=b&sig=4h1sqCeGeMgLFyWTtPkWK17XPsi%2FjmrZQJ3Z23DsTPM%3D&st=2018-07-25T04%3A50%3A51Z&se=2023-07-25T04%3A55%3A51Z&sp=rw",
+"DesignerComments": "3a",
+"CelaComments": "3a",
+"DesignerSignoff": "pending",
+"CelaSignoff": "accepted",
+"GeopolFullMarketComments": "3a",
+"LSPComments": "This image is bad3a",
+"GeopolFullMarketSignoff": "sev1",
+"LSPSignoff": "sev4",
+"ThemeCategories": "Alcohol, Animals, Creatures, Ethnic_Diversity, Animals, Ethnic_Diversity",
+"TargetMarkets": "Global_Release, US-only_Release, Western_Markets, Asian_Markets, US-only_Release, Western_Markets, Asian_Markets"
+},
+{
+"Id": "4",
+"Filename": "compliance3.jpg",
+"Comments": "",
+"Images": "http://globalreadinessfileshare.blob.core.windows.net/imagereview/2018-07-24_EDU1_JonChoe/compliance3.jpg?sv=2014-02-14&sr=b&sig=PhM8wzllgn4%2F8VUboFycsIsS%2BXeVxCS6cCxpV7%2BXD7Y%3D&st=2018-07-25T04%3A50%3A51Z&se=2023-07-25T04%3A55%3A51Z&sp=rw",
+"DesignerComments": "4a",
+"CelaComments": "4abcdef",
+"DesignerSignoff": "accepted",
+"CelaSignoff": "rejected",
+"GeopolFullMarketComments": "4a",
+"LSPComments": "This image is bad4a",
+"GeopolFullMarketSignoff": "pending",
+"LSPSignoff": "sev2",
+"ThemeCategories": "Alcohol, Creatures, Religion, Text, Violence, Alcohol, Creatures",
+"TargetMarkets": "US-only_Release, Western_Markets, Asian_Markets, Latin-American_Markets, African/Middle_Eastern_Markets, US-only_Release, Western_Markets, Asian_Markets, Latin-American_Markets"
+}
+]
+}
