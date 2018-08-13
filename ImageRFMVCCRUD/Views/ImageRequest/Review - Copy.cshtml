@@ -111,7 +111,6 @@
                 }
         };
 
-
         //Target Markets Config setting
         var targetMarkets = {
             autoOpen: false,
@@ -135,16 +134,11 @@
             }
         };
 
-        //function make_json(form) {
-        //    var json = {
-        //        "ModifiedBy" : form.modifiedBy.value
-        //    }
-        //    var html = JSON.stringify(json, 0, 4);
-        //    document.getElementById("output").innerHTML = html;
-        //    return false;
-        //}
+        $(document).ready(function () {
+            debugger
+            var nextPage = "";
+            var previousPage = "";
 
-        $(document).ready(function () {  
             //Sets the lower and upper default pagination
             if ((localStorage.getItem("lowerLimitPagination") == null) || (localStorage.getItem("lowerLimitPagination") == "undefined")) {
                 localStorage.setItem("lowerLimitPagination", 0);
@@ -153,17 +147,33 @@
 
             //Capture pagination info
             $("ul.pagination li").click(function () {
-                //Lower limit pagination
-                localStorage.setItem("lowerLimitPagination", parseInt($(this).text()) * 10);
-                //Upper limit pagination
-                localStorage.setItem("upperLimitPagination", (parseInt($(this).text()) + 1) * 10);
-                //Pass the Review page URL with the request ID
-                var queryParam = localStorage.getItem('requestID');
-                //Load the Review page
-                PopupReviewForm(queryParam);
-                //Close the previous popup dialog
-                Popup.dialog('destroy').remove();
+                if ($(this).text() == "Next") {
+                    //Lower limit pagination
+                    localStorage.setItem("lowerLimitPagination", parseInt($(this).text() + 1) * 10);
+                    //Upper limit pagination
+                    localStorage.setItem("upperLimitPagination", (parseInt($(this).text()) + 2) * 10);
+                }
+                else if ($(this).text() == "Previous") {
+                    //Lower limit pagination
+                    localStorage.setItem("lowerLimitPagination", parseInt($(this).text() - 1) * 10);
+                    //Upper limit pagination
+                    localStorage.setItem("upperLimitPagination", (parseInt($(this).text())) * 10);
+                }
+                else {
+                    //Lower limit pagination
+                    localStorage.setItem("lowerLimitPagination", parseInt($(this).text()) * 10);
+                    //Upper limit pagination
+                    localStorage.setItem("upperLimitPagination", (parseInt($(this).text()) + 1) * 10);
+                    //Pass the Review page URL with the request ID
+                };
             });
+
+            //Pass the Review page URL with the request ID
+            var queryParam = localStorage.getItem('requestID');
+            //Load the Review page
+            PopupReviewForm(queryParam);
+            //Close the previous popup dialog
+            Popup.dialog('destroy').remove();
 
             function PopupReviewForm(url) {
                 var formDiv = $("#pagination");
@@ -196,7 +206,8 @@
                 console.log($(this).text());
             });
 
-            function objectifyForm(formArray) {//serialize data function
+            //serialize data function
+            function objectifyForm(formArray) {
                 var returnArray = {};
                 for (var i = 1; i < formArray.length; i++) {
                     returnArray[formArray[i]['name']] = formArray[i]['value'];
@@ -232,8 +243,6 @@
                     }
                 });
             })
-
-
 
             //Expand and Collapse
             $('a[data-toggle="collapse"]').on('click', function () {

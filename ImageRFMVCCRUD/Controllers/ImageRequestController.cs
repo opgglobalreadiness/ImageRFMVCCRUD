@@ -231,150 +231,238 @@ namespace ImageRFMVCCRUD.Controllers
                 "</html>";
             sm.SendMail("jchoe@microsoft.com", "jchoe@microsoft.com", ccEmailAddress, subject, emailBody, false, "");
         }
-        public async System.Threading.Tasks.Task SendEMailReviewFormFromAzureAsync(string _requestID,
-                                                                                   string _modifiedBy,
-                                                                                   string _modifiedDate,
-                                                                                   string _imageSrc)
+        public async System.Threading.Tasks.Task SendEMailReviewFormFromAzureAsync(Dictionary<string, string> formdata, string requestID)
         {
-            string subject = string.Format("Image Review Submission: ID: " + _requestID);
+            string subject = string.Format("Image Review Submission: ID: " + requestID);
+            var emailHead = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" +
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\">" +
+            "<head>" +
+            "<title>Image Reviewer Tool Email Summary</title>" +
+            "<style>" +
+            "table td, table td * {" +
+            "    vertical-align: top;" +
+            "	font-family: calibri;" +
+            "	padding: 2px;" +
+            "   background-color: #ddd" +
+            "}" +
+            "#review {" +
+            "    font-family: calibri" +
+            "    border-collapse: collapse;" +
+            "    width: 100%;" +
+            "}" +
+            "#review td, #review th {" +
+            "    border: 1px solid #ddd;" +
+            "    padding: 8px;" +
+            "}" +
+            "#review tr:nth-child(even){background-color: #f2f2f2;}" +
+            "#review tr:hover {background-color: #ddd;}" +
+            "#review th {" +
+            "    padding-top: 12px;" +
+            "    padding-bottom: 12px;" +
+            "    text-align: left;" +
+            "    background-color: #4CAF50;" +
+            "    color: white;" +
+            "}" +
+            "</style>" +
+            "</head>" +
+            "<body>";
 
-            var emailBody = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd\">" +
-                            "<html xmlns=\"http://www.w3.org/1999/xhtml\">" +
-                            "<head>" +
-                            "<title>Image Reviewer Tool Email Summary" +
-                            "</title>" +
-                            "<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\">" +
-                            "</head>" +
-                            "<body>" +
-                            "<div class=\"container-fluid\">" +
-                                "<div class=\"row\">" +
-                                    "<div class=\"col-md-12\">" +
-                                        "<span><hr></span>" +
-                                        "<div class=\"row\">" +
-                                            "<div class=\"col-md-1\">" +
-                                                "<img alt=\"Image Preview\" src=\"" + _imageSrc + "\" width=\"150 height=\"150\" style=\"padding-right: 15px;padding-bottom:5px\"/>" +
-                                            "</div>" +
-                                            "<div class=\"col-md-1\">" +
-                                                "<dl>" +
-                                                    "<dt>" +
-                                                        "Image ID" +
-                                                    "</dt>" +
-                                                    "<dd>" +
-                                                        _imageSrc +
-                                                    "</dd>" +
-                                                    "<dt>" +
-                                                        "Image Name" +
-                                                    "</dt>" +
-                                                    "<dd>" +
-                                                        "ABC.png" +
-                                                    "</dd>" +
-                                                "</dl>" +
-                                            "</div>" +
-                                            "<div class=\"col-md-1\">" +
-                                                "<dl>" +
-                                                    "<dt>" +
-                                                        "Modified By" +
-                                                    "</dt>" +
-                                                    "<dd>" +
-                                                        _modifiedBy + 
-                                                    "</dd>" +
-                                                    "<dt>" +
-                                                        "Modified Date" +
-                                                    "</dt>" +
-                                                    "<dd>" +
-                                                        _modifiedDate + 
-                                                    "</dd>" +
-                                                "</dl>" +
-                                            "</div>" +
-                                            "<div class=\"col-md-9\">" +
-                                                "<dl>" +
-                                                    "<dt>" +
-                                                        "Image Comments" +
-                                                    "</dt>" +
-                                                    "<dd>" +
-                                                        "This image contains a person riding a bicycle." +
-                                                    "</dd>" +
-                                                    "<dt>" +
-                                                        "Theme or Subcategories" +
-                                                    "</dt>" +
-                                                    "<dd>" +
-                                                        "Culture, Text, Religion" +
-                                                    "</dd>" +
-                                                    "<dt>" +
-                                                        "Target Markets" +
-                                                    "</dt>" +
-                                                    "<dd>" +
-                                                        "Global-Release, Asian-Release" +
-                                                    "</dd>" +
-                                                "</dl>" +
-                                            "</div>" +
-                                        "</div>" +
-                                        "<table class=\"table\" style=\"font-size: small\">" +
-                                            "<thead>" +
-                                                "<tr>" +
-                                                    "<th class=\"col-md-2\">" +
-                                                        "Comments" +
-                                                    "</th>" +
-                                                    "<th class=\"col-md-8\">" +
-                                                        "Description" +
-                                                    "</th>" +
-                                                    "<th class=\"col-md-2\">" +
-                                                        "Status" +
-                                                    "</th>" +
-                                                "</tr>" +
-                                            "</thead>" +
+
+            //image index id
+            //int imageID = 0;
+            //Calculate number of images to be processes
+            int currentImageID = 1;
+            var emailBody = String.Empty;
+
+            string _modifiedBy = String.Empty;
+            string _modifiedDate = String.Empty;
+            string _imageID = String.Empty;
+            string _imageFilename = String.Empty;
+            string _imageComments = String.Empty;
+            string _imageSrc = String.Empty;
+            string _designerSignoff = String.Empty;
+            string _designerComments = String.Empty;
+            string _celaSignoff = String.Empty;
+            string _celaComments = String.Empty;
+            string _geopolFullMarketSignoff = String.Empty;
+            string _geopolFullMarketComments = String.Empty;
+            string _lspSignoff = String.Empty;
+            string _lspComments = String.Empty;
+            string _themeCategoriesID = String.Empty;
+            string _targetMarketID = String.Empty;
+
+            List<string> totalNumberOfImages = new List<string>();
+
+            //Parse the form data
+            foreach (KeyValuePair<string, string> item in formdata)
+            {
+                if (item.Key == "modifiedBy")
+                {
+                    _modifiedBy= item.Value;
+                }
+                else if (item.Key == "modifiedDate")
+                {
+                    _modifiedDate = item.Value;
+                }
+
+                if (item.Key.Contains("_") == true)
+                {
+                    //for ex: DesignerSignoff_1, CelaSignoff_1, etc...
+                    string[] itemKey = item.Key.Split('_');
+
+                    //counter refers to the second delimiter item which is a number
+                    int counter = 0;
+
+                    foreach (string id in itemKey)
+                    {
+                        //Only grab the number: for ex: DesignerSignoff_1, CelaSignoff_1, etc...
+                        if (counter == 1)
+                        {
+                            //Generate HTML Body with collection of images: after *_1 or *_2 or *_3 is done, generate email body. For ex: DesignerSignoff_1, CelaSignoff_1, LSPComments_1, etc...
+                            if (currentImageID < Int32.Parse(id))
+                            {
+                                 emailBody += "<div style=\"padding-top:10px;border-top:1px solid #ff6a00;\">" +
+                                            "<table style=\"width:100%\">" +
                                             "<tbody>" +
-                                                "<tr>" +
-                                                    "<td>" +
-                                                        "Designer Comments" +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "This is a designer comments." +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "Accepted" +
-                                                    "</td>" +
-                                                "</tr>" +
-                                                "<tr class=\"table-active\">" +
-                                                    "<td>" +
-                                                        "Cela Comments" +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "This is a CELA comments." +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "Pending" +
-                                                    "</td>" +
-                                                "</tr>" +
-                                                "<tr class=\"table-success\">" +
-                                                    "<td>" +
-                                                        "GeoPol Comments" +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "This is a GeoPol comments." +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "Rejected" +
-                                                    "</td>" +
-                                                "</tr>" +
-                                                "<tr class=\"table-warning\">" +
-                                                    "<td>" +
-                                                        "LSP Comments" +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "This is a LSP comments." +
-                                                    "</td>" +
-                                                    "<td>" +
-                                                        "Pending" +
-                                                    "</td>" +
-                                                "</tr>" +
+                                            "<tr>" +
+                                            "<td style=\"width:150px;padding-right:10px;vertical-align:top;\" colspan=1><img src=\"" + _imageSrc + "\" width=\"150\" height=\"150\" /></td>" +
+                                            "<td style=\"width:250px;vertical-align:top;\" colspan=1><strong>ImageID:</strong> <br />" + _imageID + "<br /><br /> <strong>Image Name</strong><br />" + _imageFilename + "<br /><br /><b>Image Comments</b><br />" + _imageComments + "</td>" +
+                                            "<td style=\"width:150px;vertical-align:top;\" colspan=1><b>Modified By</b><br />" + _modifiedBy + "</br /><br/><b>Modified Date</b><br />" + _modifiedDate + "<br /><br /></td>" +
+                                            "<td style=\"width:500px;vertical-align:top;\" colspan=1><b>Themes or Subcategories</b><br />" + _themeCategoriesID + "<br /><br /><b>Target Markets</b><br />" + _targetMarketID + "<br /><br /><b></td>" +
+                                            "</tr>" +
                                             "</tbody>" +
-                                        "</table>" +
-                                    "</div>" +
-                                "</div>" +
-                            "</div>" +
-                            "</body>" +
-                            "</html>";
+                                            "</table>" +
+                                            "<table id=\"review\" style=\"width:100%\">" +
+                                            "<tr>" +
+                                            "<td style=\"width:150px\" colspan=1><b>Comments</b></td>" +
+                                            "<td colspan=2><b>Description</b></td>" +
+                                            "<td colspan=1><b>Status</b></td>" +
+                                            "</tr>" +
+                                            "<tr>" +
+                                            "<td style=\"width:150px\" colspan=1>Designer Comments</td>" +
+                                            "<td colspan=2>" + _designerComments + "</td>" +
+                                            "<td colspan=1>" + _designerSignoff + "</td>" +
+                                            "</tr>" +
+                                            "<tr>" +
+                                            "<td style=\"width:150px\" colspan=1>Cela Comments</td>" +
+                                            "<td colspan=2>" + _celaComments + "</td>" +
+                                            "<td colspan=1>" + _celaSignoff + "</td>" +
+                                            "</tr>" +
+                                            "<tr>" +
+                                            "<td style=\"width:150px\" colspan=1>GeoPol Comments</td>" +
+                                            "<td colspan=2>" + _geopolFullMarketComments + "</td>" +
+                                            "<td colspan=1>" + _geopolFullMarketSignoff + "</td>" +
+                                            "</tr>" +
+                                            "<tr>" +
+                                            "<td style=\"width:150px\" colspan=1>LSP Comments</td>" +
+                                            "<td colspan=2>" + _lspComments + "</td>" +
+                                            "<td colspan=1>" + _lspSignoff + "</td>" +
+                                            "</tr>" +
+                                            "</table><p>&nbsp;</p>" +
+                                            "</div>";
+                                //image index id
+                                currentImageID = Int32.Parse(id);
+                            }
+
+                            //Determine the form element
+                            string caseSwitch = item.Key.Substring(0, item.Key.IndexOf("_"));
+
+                            switch (caseSwitch)
+                            {
+                                case "imageID":
+                                    _imageID = item.Value;
+                                    break;
+                                case "imageFilename":
+                                    _imageFilename = item.Value;
+                                    break;
+                                case "imageComments":
+                                    _imageComments = item.Value;
+                                    break;
+                                case "imageSrc":
+                                    _imageSrc = item.Value;
+                                    break;
+                                case "DesignerSignoff":
+                                    _designerSignoff = item.Value;
+                                    break;
+                                case "DesignerComments":
+                                    _designerComments = item.Value;
+                                    break;
+                                case "CelaSignoff":
+                                    _celaSignoff = item.Value;
+                                    break;
+                                case "CelaComments":
+                                    _celaComments = item.Value;
+                                    break;
+                                case "GeopolFullMarketSignoff":
+                                    _geopolFullMarketSignoff = item.Value;
+                                    break;
+                                case "GeopolFullMarketComments":
+                                    _geopolFullMarketComments = item.Value;
+                                    break;
+                                case "LSPSignoff":
+                                    _lspSignoff = item.Value;
+                                    break;
+                                case "LSPComments":
+                                    _lspComments = item.Value;
+                                    break;
+                                case "themeCategoriesID":
+                                    _themeCategoriesID = item.Value;
+                                    break;
+                                case "targetMarketsID":
+                                    _targetMarketID = item.Value;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                        counter++;
+                    }
+                }
+            }
+
+            //Capture the last image
+            emailBody += "<div style=\"padding-top:10px;border-top:1px solid #ff6a00;\">" +
+                            "<table style=\"width:100%\">" +
+                            "<tbody>" +
+                            "<tr>" +
+                            "<td style=\"width:150px;padding-right:10px;vertical-align:top;\" colspan=1><img src=\"" + _imageSrc + "\" width=\"150\" height=\"150\" /></td>" +
+                            "<td style=\"width:250px;vertical-align:top;\" colspan=1><strong>ImageID:</strong> <br />" + _imageID + "<br /><br /> <strong>Image Name</strong><br />" + _imageFilename + "<br /><br /><b>Image Comments</b><br />" + _imageComments + "</td>" +
+                            "<td style=\"width:150px;vertical-align:top;\" colspan=1><b>Modified By</b><br />" + _modifiedBy + "</br /><br/><b>Modified Date</b><br />" + _modifiedDate + "<br /><br /></td>" +
+                            "<td style=\"width:500px;vertical-align:top;\" colspan=1><b>Themes or Subcategories</b><br />" + _themeCategoriesID + "<br /><br /><b>Target Markets</b><br />" + _targetMarketID + "<br /><br /><b></td>" +
+                            "</tr>" +
+                            "</tbody>" +
+                            "</table>" +
+                            "<table id=\"review\" style=\"width:100%\">" +
+                            "<tr>" +
+                            "<td style=\"width:150px\" colspan=1><b>Comments</b></td>" +
+                            "<td colspan=2><b>Description</b></td>" +
+                            "<td colspan=1><b>Status</b></td>" +
+                            "</tr>" +
+                            "<tr>" +
+                            "<td style=\"width:150px\" colspan=1>Designer Comments</td>" +
+                            "<td colspan=2>" + _designerComments + "</td>" +
+                            "<td colspan=1>" + _designerSignoff + "</td>" +
+                            "</tr>" +
+                            "<tr>" +
+                            "<td style=\"width:150px\" colspan=1>Cela Comments</td>" +
+                            "<td colspan=2>" + _celaComments + "</td>" +
+                            "<td colspan=1>" + _celaSignoff + "</td>" +
+                            "</tr>" +
+                            "<tr>" +
+                            "<td style=\"width:150px\" colspan=1>GeoPol Comments</td>" +
+                            "<td colspan=2>" + _geopolFullMarketComments + "</td>" +
+                            "<td colspan=1>" + _geopolFullMarketSignoff + "</td>" +
+                            "</tr>" +
+                            "<tr>" +
+                            "<td style=\"width:150px\" colspan=1>LSP Comments</td>" +
+                            "<td colspan=2>" + _lspComments + "</td>" +
+                            "<td colspan=1>" + _lspSignoff + "</td>" +
+                            "</tr>" +
+                            "</table><p>&nbsp;</p>" +
+                            "</div>";
+
+            var emailFooter = "</body>" +
+            "</html>";
 
             var apiKey = System.Environment.GetEnvironmentVariable("GRSendGridAPIKey");
             var client = new SendGridClient(apiKey);
@@ -382,8 +470,8 @@ namespace ImageRFMVCCRUD.Controllers
             {
                 From = new EmailAddress("jchoe@microsoft.com", "Image Reviewer Tool"),
                 Subject = subject,
-                PlainTextContent = emailBody,
-                HtmlContent = emailBody
+                PlainTextContent = emailHead + emailBody + emailFooter,
+                HtmlContent = emailHead + emailBody + emailFooter
             };
 
             msg.AddTo(new EmailAddress("jchoe@microsoft.com", "Jon C. Choe"));
@@ -966,7 +1054,7 @@ namespace ImageRFMVCCRUD.Controllers
         }
 
         [HttpPost]//Save Reviewed form
-        public JsonResult Review(Dictionary<string, string> formdata)
+        public JsonResult Review(Dictionary<string, string> formdata, string requestID)
         {
             //Calculate number of images to be processes
             List<string> imageCounterListString = new List<string>();
@@ -1029,73 +1117,70 @@ namespace ImageRFMVCCRUD.Controllers
                         //Only grab the number
                         if (counter == 1)
                         {
-                            bool alreadyExist = imageCounterListString.Contains(id);
-                            if (!alreadyExist)
+                            //image index id
+                            imageID = Int32.Parse(id);
+
+                            //Determine the form element
+                            string caseSwitch = item.Key.Substring(0, item.Key.IndexOf("_"));
+
+                            switch (caseSwitch)
                             {
-                                //image index id
-                                imageID = Int32.Parse(id);
-
-                                //Determine the form element
-                                string caseSwitch = item.Key.Substring(0, item.Key.IndexOf("_"));
-
-                                switch (caseSwitch)
-                                {
-                                    case "imageID":
-                                        reviewEntryJsonFile.Add("{");
-                                        reviewEntryJsonFile.Add("\"Id\": \"" + item.Value + "\",");
-                                        break;
-                                    case "imageFilename":
-                                        reviewEntryJsonFile.Add("\"Filename\": \"" + item.Value + "\",");
-                                        break;
-                                    case "imageComments":
-                                        reviewEntryJsonFile.Add("\"Comments\": \"" + item.Value + "\",");
-                                        break;
-                                    case "imageSrc":
-                                        reviewEntryJsonFile.Add("\"Images\": \"" + item.Value + "\",");
-                                        break;
-                                    case "DesignerSignoff":
-                                        reviewEntryJsonFile.Add("\"DesignerSignoff\": \"" + item.Value + "\",");
-                                        break;
-                                    case "DesignerComments":
-                                        reviewEntryJsonFile.Add("\"DesignerComments\": \"" + item.Value + "\",");
-                                        break;
-                                    case "CelaSignoff":
-                                        reviewEntryJsonFile.Add("\"CelaSignoff\": \"" + item.Value + "\",");
-                                        break;
-                                    case "CelaComments":
-                                        reviewEntryJsonFile.Add("\"CelaComments\": \"" + item.Value + "\",");
-                                        break;
-                                    case "GeopolFullMarketSignoff":
-                                        reviewEntryJsonFile.Add("\"GeopolFullMarketSignoff\": \"" + item.Value + "\",");
-                                        break;
-                                    case "GeopolFullMarketComments":
-                                        reviewEntryJsonFile.Add("\"GeopolFullMarketComments\": \"" + item.Value + "\",");
-                                        break;
-                                    case "LSPSignoff":
-                                        reviewEntryJsonFile.Add("\"LSPSignoff\": \"" + item.Value + "\",");
-                                        break;
-                                    case "LSPComments":
-                                        reviewEntryJsonFile.Add("\"LSPComments\": \"" + item.Value + "\",");
-                                        break;
-                                    case "themeCategoriesID":
-                                        reviewEntryJsonFile.Add("\"ThemeCategories\": \"" + item.Value + "\",");
-                                        break;
-                                    case "targetMarketsID":
-                                        reviewEntryJsonFile.Add("\"TargetMarkets\": \"" + item.Value + "\"");
-                                        //Comma not needed for the last item
-                                        if (imageID == totalNumberOfImages.Count)
-                                        {
-                                            reviewEntryJsonFile.Add("}");
-                                        }
-                                        else
-                                        {
-                                            reviewEntryJsonFile.Add("},");
-                                        }
-                                        break;
-                                    default:
-                                        break;
-                                }
+                                case "imageID":
+                                    reviewEntryJsonFile.Add("{");
+                                    reviewEntryJsonFile.Add("\"Id\": \"" + item.Value + "\",");
+                                    break;
+                                case "imageFilename":
+                                    reviewEntryJsonFile.Add("\"Filename\": \"" + item.Value + "\",");
+                                    break;
+                                case "imageComments":
+                                    reviewEntryJsonFile.Add("\"Comments\": \"" + item.Value + "\",");
+                                    break;
+                                case "imageSrc":
+                                    reviewEntryJsonFile.Add("\"Images\": \"" + item.Value + "\",");
+                                    break;
+                                case "DesignerSignoff":
+                                    reviewEntryJsonFile.Add("\"DesignerSignoff\": \"" + item.Value + "\",");
+                                    break;
+                                case "DesignerComments":
+                                    reviewEntryJsonFile.Add("\"DesignerComments\": \"" + item.Value + "\",");
+                                    break;
+                                case "CelaSignoff":
+                                    reviewEntryJsonFile.Add("\"CelaSignoff\": \"" + item.Value + "\",");
+                                    break;
+                                case "CelaComments":
+                                    reviewEntryJsonFile.Add("\"CelaComments\": \"" + item.Value + "\",");
+                                    break;
+                                case "GeopolFullMarketSignoff":
+                                    reviewEntryJsonFile.Add("\"GeopolFullMarketSignoff\": \"" + item.Value + "\",");
+                                    break;
+                                case "GeopolFullMarketComments":
+                                    reviewEntryJsonFile.Add("\"GeopolFullMarketComments\": \"" + item.Value + "\",");
+                                    break;
+                                case "LSPSignoff":
+                                    reviewEntryJsonFile.Add("\"LSPSignoff\": \"" + item.Value + "\",");
+                                    break;
+                                case "LSPComments":
+                                    reviewEntryJsonFile.Add("\"LSPComments\": \"" + item.Value + "\",");
+                                    break;
+                                case "themeCategoriesID":
+                                    reviewEntryJsonFile.Add("\"ThemeCategories\": \"" + item.Value + "\",");
+                                    break;
+                                case "targetMarketsID":
+                                    reviewEntryJsonFile.Add("\"TargetMarkets\": \"" + item.Value + "\"");
+                                    //Comma not needed for the last item
+                                    if (imageID == totalNumberOfImages.Count)
+                                    {
+                                        reviewEntryJsonFile.Add("}");
+                                    }
+                                    else
+                                    {
+                                        reviewEntryJsonFile.Add("},");
+                                    }
+                                    break;
+                                default:
+                                    break;
                             }
+
                         }
                         counter++;
                     }
@@ -1130,7 +1215,6 @@ namespace ImageRFMVCCRUD.Controllers
 
             //Create and Upload ReviewEntry.json file to Azure File Storage
             SaveReviewForm(reviewEntryJsonFile, targetFolder, blobContainer);
-
 
             return Json(new { success = true, message = "Saved Successfully!" }, JsonRequestBehavior.AllowGet);
         }
